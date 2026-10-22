@@ -58,8 +58,8 @@ jobs:
 
       - name: Save pipeline state
         run: |
-          git config user.name "mealtime-bot"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "mealtime-bot"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           tmp=$(mktemp -d)
           cp data/state.json "$tmp/state.json"
           cd "$tmp"
