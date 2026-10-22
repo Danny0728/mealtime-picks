@@ -60,6 +60,11 @@ function historySets(store) {
     if (h.status === 'shown' && now - h.at < 5 * 864e5) recentShown.set(h.id, (recentShown.get(h.id) ?? 0) + 1)
   }
   for (const s of store.saved ?? []) for (const id of s.ids ?? []) liked.push(id)
+  // "How was it?" on titles watched elsewhere: taste only, they never tune the weights.
+  for (const [id, r] of Object.entries(store.seenRatings ?? {})) {
+    if (r === 'liked') liked.push(id)
+    if (r === 'disliked') disliked.push(id)
+  }
   return { taken, liked, disliked, recentShown }
 }
 
@@ -93,8 +98,9 @@ function allowed(item, settings, who) {
  * @param {object} store    local store (settings, history, seen, saved, weights)
  * @param {{time:string, mood:string|null, who:string}} ask
  * @param {() => number} rng injectable randomness for tests
+ * @param {object[]} keep  picks already on screen to keep; only the free slots are filled
  */
-export function pick(catalog, store, ask, rng = Math.random) {
+export function pick(catalog, store, ask, rng = Math.random, keep = null) {
   const slot = timeById(ask.time)
   const w = { ...DEFAULT_WEIGHTS, ...(store.weights ?? {}) }
   const { taken, liked, disliked, recentShown } = historySets(store)
@@ -128,9 +134,13 @@ export function pick(catalog, store, ask, rng = Math.random) {
   }
   pool.sort((a, b) => b.score - a.score)
 
-  const picks = []
-  const cont = continuePick(store, byId, slot)
-  if (cont) picks.push(cont)
+  let picks = []
+  if (keep) {
+    picks = [...keep]
+  } else {
+    const cont = continuePick(store, byId, slot)
+    if (cont) picks.push(cont)
+  }
   return { picks: diversify(pool, picks, 3, rng), poolSize: pool.length, moodMatched }
 }
 

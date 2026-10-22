@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { MOODS, TIMES, WHO } from '../lib/picker.js'
-import { ALL_PLATFORMS } from '../lib/store.js'
+import { ALL_PLATFORMS, SEEN_RATINGS } from '../lib/store.js'
 import { Back, Badge, External, IconButton, Poster, Shuffle } from '../components/ui.jsx'
 
 const label = (list, id) => list.find((x) => x.id === id)?.label
@@ -23,6 +24,7 @@ function openUrl(item, platform) {
 
 export default function Results({ store, go, results, onPicked, onSeen, onShuffle }) {
   const { ask, picks } = results
+  const [rating, setRating] = useState(null) // key of the pick asking "How was it?"
   const summary = [label(TIMES, ask.time), label(MOODS, ask.mood), label(WHO, ask.who)].filter(Boolean).join(' · ')
   const mine = new Set(store.settings.platforms)
 
@@ -77,6 +79,26 @@ export default function Results({ store, go, results, onPicked, onSeen, onShuffl
                 <p className="text-sm leading-snug text-soft">{p.reason}</p>
               </div>
             </div>
+            {rating === p.key ? (
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-semibold">How was it?</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {SEEN_RATINGS.map((r) => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => { setRating(null); onSeen(p, r.id) }}
+                      className="min-h-11 rounded-xl border border-line bg-card px-1 text-sm font-semibold"
+                    >
+                      {r.label}
+                    </button>
+                  ))}
+                </div>
+                <button type="button" onClick={() => { setRating(null); onSeen(p, null) }} className="min-h-9 text-sm text-muted">
+                  Skip
+                </button>
+              </div>
+            ) : (
             <div className="grid grid-cols-2 gap-2">
               <a
                 href={openUrl(main, platform)}
@@ -89,12 +111,13 @@ export default function Results({ store, go, results, onPicked, onSeen, onShuffl
               </a>
               <button
                 type="button"
-                onClick={() => onSeen(p)}
+                onClick={() => setRating(p.key)}
                 className="min-h-11 rounded-xl border border-line bg-card text-sm font-semibold"
               >
                 Seen it
               </button>
             </div>
+            )}
           </article>
         )
       })}

@@ -24,12 +24,20 @@ export const ALL_LANGUAGES = [
   { id: 'ml', label: 'Malayalam' },
 ]
 
+// "How was it?" for something the family watched outside the app.
+export const SEEN_RATINGS = [
+  { id: 'liked', label: 'Loved it', short: 'Loved' },
+  { id: 'ok', label: 'It was OK', short: 'OK' },
+  { id: 'disliked', label: "Didn't like it", short: 'Nah' },
+]
+
 export function emptyStore() {
   return {
     version: 1,
     settings: { platforms: ['netflix', 'prime', 'youtube'], languages: ['hi', 'en', 'mr'], familySafe: true, onboarded: false },
     history: [],
     seen: [],
+    seenRatings: {}, // id -> 'liked' | 'ok' | 'disliked' for titles watched outside the app
     saved: [],
     weights: null,
     lastAsk: { time: '45', mood: 'feelgood', who: 'family' },
@@ -64,6 +72,7 @@ export function normalize(s) {
     settings: { ...base.settings, ...(s?.settings ?? {}) },
     history: Array.isArray(s?.history) ? s.history : [],
     seen: Array.isArray(s?.seen) ? s.seen : [],
+    seenRatings: s?.seenRatings && typeof s.seenRatings === 'object' && !Array.isArray(s.seenRatings) ? s.seenRatings : {},
     saved: Array.isArray(s?.saved) ? s.saved : [],
     lastAsk: { ...base.lastAsk, ...(s?.lastAsk ?? {}) },
   }

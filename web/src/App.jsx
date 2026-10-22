@@ -92,12 +92,26 @@ export default function App() {
     })
   }
 
-  const markSeen = (p) => {
+  // A pick the family has already watched: remember how it went, then fill
+  // its slot with something new so there are still three to compare.
+  const markSeen = (p, rating) => {
+    if (!results) return
+    const ids = p.items.map((it) => it.id)
+    const seenRatings = { ...store.seenRatings }
+    if (rating) for (const id of ids) seenRatings[id] = rating
+    const shownThisRound = store.history.filter((h) => h.session === results.session).map((h) => h.id)
+    const keep = results.picks.filter((x) => x.key !== p.key)
+    const view = { ...store, seenRatings, seen: [...store.seen, ...ids, ...shownThisRound] }
+    const picks = catalog.status === 'ready' ? pick(catalog.data, view, results.ask, Math.random, keep).picks : keep
+    const added = picks.slice(keep.length)
+    const now = Date.now()
     update((s) => {
-      for (const it of p.items) if (!s.seen.includes(it.id)) s.seen.push(it.id)
+      for (const id of ids) if (!s.seen.includes(id)) s.seen.push(id)
+      s.seenRatings = seenRatings
+      for (const a of added) for (const it of a.items) s.history.push({ id: it.id, status: 'shown', feedback: null, at: now, session: results.session })
       return s
     })
-    setResults((r) => r && { ...r, picks: r.picks.filter((x) => x.key !== p.key) })
+    setResults((r) => r && { ...r, picks })
   }
 
   const giveFeedback = (entryAt, value) => {

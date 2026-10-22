@@ -63,6 +63,46 @@ test('liked titles pull similar ones up', () => {
   assert.match(picks[0].reason, /which you liked/)
 })
 
+test('a seen title rated "loved" pulls similar ones up', () => {
+  const cat = { items: [
+    item('watched', { sim: ['twin'] }),
+    item('twin', { q: 0.4, sim: ['watched'] }),
+    item('other', { q: 0.5 }),
+  ] }
+  const s = store({ seen: ['watched'], seenRatings: { watched: 'liked' } })
+  const { picks } = pick(cat, s, { time: '45', mood: null, who: 'adults' }, seq(0.9))
+  assert.ok(!picks.some((p) => p.items[0].id === 'watched'))
+  assert.equal(picks[0].items[0].id, 'twin')
+  assert.match(picks[0].reason, /Close to watched/)
+})
+
+test('a seen title rated "ok" only hides it', () => {
+  const cat = { items: [
+    item('watched', { sim: ['twin'] }),
+    item('twin', { q: 0.4, sim: ['watched'] }),
+    item('other', { q: 0.5 }),
+  ] }
+  const ask = { time: '45', mood: null, who: 'adults' }
+  const plain = pick(cat, store({ seen: ['watched'] }), ask, seq(0.9)).picks
+  const ok = pick(cat, store({ seen: ['watched'], seenRatings: { watched: 'ok' } }), ask, seq(0.9)).picks
+  assert.deepEqual(ok.map((p) => [p.key, p.score]), plain.map((p) => [p.key, p.score]))
+})
+
+test('kept picks stay put and the free slot gets a new title', () => {
+  const cat = { items: ['a', 'b', 'c', 'd', 'e'].map((id, i) => item(id, { q: 0.9 - i * 0.1, genres: [id] })) }
+  const ask = { time: '45', mood: null, who: 'adults' }
+  const first = pick(cat, store(), ask, seq(0.9)).picks
+  assert.equal(first.length, 3)
+  const shown = first.map((p) => p.key)
+  // The family has seen the middle one; the other two are kept.
+  const keep = [first[0], first[2]]
+  const { picks } = pick(cat, store({ seen: shown }), ask, seq(0.9), keep)
+  assert.equal(picks.length, 3)
+  assert.equal(picks[0], first[0])
+  assert.equal(picks[1], first[2])
+  assert.ok(!shown.includes(picks[2].key), 'the replacement should be something not shown yet')
+})
+
 test('continue a liked series with the next episodes', () => {
   const cat = { items: [item('show', { kind: 'tv', epMin: 22 }), item('x')] }
   const s = store({ history: [{ id: 'show', status: 'picked', feedback: 'liked', at: Date.now(), ep: { from: 1, to: 2 } }] })

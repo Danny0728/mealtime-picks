@@ -105,6 +105,18 @@ func TestFeedbackTrustsVenues(t *testing.T) {
 	}
 }
 
+func TestSeenRatingsDontTouchTrust(t *testing.T) {
+	p, st := world(t)
+	th := model.Thread{Platform: "reddit", ID: "a", Venue: "IndianTeleVision", Title: "Recommend shows"}
+	p.ingest(th, []model.Comment{{Platform: "reddit", ThreadID: "a", Venue: th.Venue, Author: "fan1", Text: "Gullak, lovely", Score: 10, TopLevel: true}})
+	before := st.Venue("reddit", "IndianTeleVision").Trust()
+	p.Feedback = &discover.Feedback{Seen: []string{"tmdb:tv:3"}, SeenRatings: map[string]string{"tmdb:tv:3": "liked"}}
+	p.applyFeedback()
+	if v := st.Venue("reddit", "IndianTeleVision"); v.Liked != 0 || v.Trust() != before {
+		t.Errorf("a title watched elsewhere shouldn't credit the venue: liked=%d trust %.2f -> %.2f", v.Liked, before, v.Trust())
+	}
+}
+
 func contains(xs []string, s string) bool {
 	for _, x := range xs {
 		if x == s {

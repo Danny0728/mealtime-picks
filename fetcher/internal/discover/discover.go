@@ -33,8 +33,10 @@ type Feedback struct {
 		Status   string `json:"status"`
 		Feedback string `json:"feedback"`
 	} `json:"history"`
-	Seen  []string `json:"seen"`
-	Saved []struct {
+	Seen []string `json:"seen"`
+	// "How was it?" for titles watched outside the app: liked, ok or disliked.
+	SeenRatings map[string]string `json:"seenRatings"`
+	Saved       []struct {
 		Text string   `json:"text"`
 		URL  string   `json:"url"`
 		IDs  []string `json:"ids"`
@@ -56,13 +58,19 @@ func LoadFeedback(path string) (*Feedback, error) {
 	return &f, nil
 }
 
-// Liked returns ids rated 👍, most recent last; Disliked covers 👎 and
-// "didn't finish".
+// Liked returns ids rated 👍 or "loved it" when marked seen, most recent
+// last; Disliked covers 👎, "didn't finish" and "didn't like it". Seen
+// ratings come first: they are usually older than the app's own picks.
 func (f *Feedback) Liked() []string    { return f.with("liked") }
 func (f *Feedback) Disliked() []string { return append(f.with("disliked"), f.with("unfinished")...) }
 
 func (f *Feedback) with(v string) []string {
 	var out []string
+	for _, id := range f.Seen {
+		if f.SeenRatings[id] == v {
+			out = append(out, id)
+		}
+	}
 	for _, h := range f.History {
 		if h.Feedback == v {
 			out = append(out, h.ID)
