@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-22T00:00:00Z",
+  "region": "IN",
+  "sample": true,
+  "attribution": "Title data from TMDB. Where-to-watch data from JustWatch via TMDB.",
+  "stats": {},
+  "items": [
+    { "id": "sample:tv:1", "kind": "tv", "name": "Panchayat", "year": 2020, "lang": "hi", "epMin": 35, "seasons": 3, "genres": ["Comedy", "Drama"], "providers": ["prime"], "safe": true, "q": 0.78, "gem": 0.8, "threads": 9, "platforms": 2, "moods": { "funny": 0.8, "feelgood": 0.9 }, "sim": ["sample:tv:2", "sample:tv:5"] },
+    { "id": "sample:tv:2", "kind": "tv", "name": "Gullak", "year": 2019, "lang": "hi", "epMin": 30, "seasons": 3, "genres": ["Comedy", "Family"], "providers": ["sonyliv"], "safe": true, "q": 0.74, "gem": 0.85, "threads": 6, "platforms": 1, "moods": { "funny": 0.6, "feelgood": 0.9 }, "sim": ["sample:tv:1"] },
+    { "id": "sample:tv:3", "kind": "tv", "name": "Our Planet", "year": 2019, "lang": "en", "epMin": 48, "seasons": 2, "genres": ["Documentary"], "providers": ["netflix"], "safe": true, "q": 0.7, "gem": 0.3, "threads": 4, "moods": { "docu": 0.95, "feelgood": 0.3 }, "sim": ["sample:tv:4"], "popular": true },
+    { "id": "sample:tv:4", "kind": "tv", "name": "Chef's Table", "year": 2015, "lang": "en", "epMin": 50, "seasons": 6, "genres": ["Documentary"], "providers": ["netflix"], "safe": true, "q": 0.66, "gem": 0.4, "threads": 3, "moods": { "docu": 0.8, "feelgood": 0.4 }, "sim": ["sample:tv:3"] },
+    { "id": "sample:tv:5", "kind": "tv", "name": "Kota Factory", "year": 2019, "lang": "hi", "epMin": 40, "seasons": 3, "genres": ["Comedy", "Drama"], "providers": ["netflix"], "safe": true, "q": 0.68, "gem": 0.5, "threads": 5, "moods": { "feelgood": 0.5, "funny": 0.4 }, "sim": ["sample:tv:1"], "popular": true },
+    { "id": "sample:yt:1", "kind": "youtube", "name": "Dude Perfect: latest video", "lang": "en", "runtime": 15, "providers": ["youtube"], "link": "https://www.youtube.com/@DudePerfect/videos", "channel": "Dude Perfect", "safe": true, "q": 0.7, "gem": 0.2, "moods": { "sports": 0.9, "funny": 0.6 } },
+    { "id": "sample:yt:2", "kind": "youtube", "name": "Hindi stand-up set", "lang": "hi", "runtime": 24, "providers": ["youtube"], "link": "https://www.youtube.com/results?search_query=hindi+stand+up+comedy", "safe": false, "q": 0.6, "gem": 0.5, "moods": { "standup": 0.9, "funny": 0.8 } }
+  ]
+}

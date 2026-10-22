@@ -1,0 +1,51 @@
+{
+  "region": "IN",
+  "languages": ["mr", "hi", "en"],
+  "budgets": {
+    "tmdbPoolPagesPerLanguage": 10,
+    "tmdbSearchResolves": 150,
+    "tmdbDetails": 1500,
+    "redditQueries": 40,
+    "redditThreadsPerQuery": 10,
+    "redditTrustedSubSearches": 8,
+    "youtubeSearches": 15,
+    "youtubeCommentPages": 60,
+    "instagramUniqueHashtagsPer7Days": 30
+  },
+  "discoveryPhrases": ["underrated", "hidden gems", "must watch", "best", "recommend"],
+  "seedQueries": [
+    "underrated movies to watch with family",
+    "feel good movies recommendation",
+    "best documentaries netflix india",
+    "hidden gem web series india",
+    "underrated marathi movies",
+    "best stand up comedy specials"
+  ],
+  "youtube": {
+    "watchableQueries": [
+      "full stand up special hindi",
+      "full stand up comedy special",
+      "full documentary",
+      "marathi stand up comedy"
+    ],
+    "recommendationQueries": [
+      "must watch marathi movies",
+      "underrated hindi web series",
+      "hidden gem movies you missed"
+    ],
+    "curatedChannels": [
+      { "id": "UCRijo3ddMTht_IHyNSNXpNQ", "name": "Dude Perfect", "familySafe": true, "moods": ["sports", "funny"] }
+    ],
+    "minDurationMin": 8,
+    "maxDurationMin": 90
+  },
+  "instagram": {
+    "enabled": false,
+    "graphVersion": "v21.0",
+    "coreHashtags": [
+      "marathimovies", "marathicinema", "hindiwebseries", "mustwatchmovies",
+      "hiddengems", "underratedmovies", "documentaries", "moviesuggestions"
+    ],
+    "rotatingSlots": 10
+  }
+}

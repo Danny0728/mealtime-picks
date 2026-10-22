@@ -1,0 +1,282 @@
+// The on-device half of the engine: filter the weekly catalog to what this
+// household can watch right now, score it with the weights the family's
+// feedback has tuned, and choose 3 picks that differ from each other.
+
+export const TIMES = [
+  { id: '20', label: '20 min', lo: 12, hi: 25, target: 20 },
+  { id: '30', label: '30 min', lo: 20, hi: 36, target: 30 },
+  { id: '45', label: '45 min', lo: 30, hi: 52, target: 45 },
+  { id: '60', label: '1 hr+', lo: 45, hi: 140, target: 75 },
+]
+
+export const MOODS = [
+  { id: 'funny', label: 'Funny' },
+  { id: 'feelgood', label: 'Feel-good' },
+  { id: 'docu', label: 'Documentary' },
+  { id: 'thriller', label: 'Thriller' },
+  { id: 'standup', label: 'Stand-up' },
+  { id: 'sports', label: 'Sports' },
+]
+
+export const WHO = [
+  { id: 'family', label: 'Whole family' },
+  { id: 'kids', label: 'Kids around' },
+  { id: 'adults', label: 'Just adults' },
+]
+
+export const DEFAULT_WEIGHTS = { q: 0.3, r: 0.25, p: 0.2, g: 0.15, f: 0.1 }
+
+const FACTORS = ['q', 'r', 'p', 'g', 'f']
+
+export function timeById(id) {
+  return TIMES.find((t) => t.id === id) ?? TIMES[2]
+}
+
+// How well an item fills the slot. Series return how many episodes fit.
+export function fit(item, slot) {
+  if (item.kind === 'tv') {
+    const ep = item.epMin || 30
+    const n = Math.max(0, Math.floor((slot.target + 5) / ep))
+    if (n < 1 || ep > slot.hi) return { score: 0 }
+    const used = Math.min(n * ep, slot.hi)
+    return { score: 1 - Math.abs(slot.target - used) / slot.target * 0.6, episodes: Math.min(n, 4), minutes: Math.min(n, 4) * ep }
+  }
+  const m = item.runtime || 0
+  if (!m || m > slot.hi) return { score: 0 }
+  if (m < slot.lo) return { score: 0.35, minutes: m, short: true }
+  return { score: 1 - Math.abs(slot.target - m) / (slot.hi - slot.lo + 10), minutes: m }
+}
+
+function historySets(store) {
+  const taken = new Set(store.seen ?? [])
+  const liked = []
+  const disliked = []
+  const recentShown = new Map()
+  const now = Date.now()
+  for (const h of store.history ?? []) {
+    if (h.status === 'picked' || h.feedback) taken.add(h.id)
+    if (h.feedback === 'liked') liked.push(h.id)
+    if (h.feedback === 'disliked' || h.feedback === 'unfinished') disliked.push(h.id)
+    if (h.status === 'shown' && now - h.at < 5 * 864e5) recentShown.set(h.id, (recentShown.get(h.id) ?? 0) + 1)
+  }
+  for (const s of store.saved ?? []) for (const id of s.ids ?? []) liked.push(id)
+  return { taken, liked, disliked, recentShown }
+}
+
+// Similarity from the weekly neighbour lists: rank 0 ≈ 1, rank 11 ≈ 0.1.
+export function simScore(a, b) {
+  if (!a || !b) return 0
+  const i = (a.sim ?? []).indexOf(b.id)
+  const j = (b.sim ?? []).indexOf(a.id)
+  const r = Math.min(i < 0 ? 99 : i, j < 0 ? 99 : j)
+  return r === 99 ? 0 : 1 - r / 13
+}
+
+function genreOverlap(a, b) {
+  if (!a.genres?.length || !b.genres?.length) return 0
+  const s = new Set(a.genres)
+  return b.genres.filter((g) => s.has(g)).length / Math.max(a.genres.length, b.genres.length)
+}
+
+function allowed(item, settings, who) {
+  const platforms = new Set(settings.platforms)
+  if (!item.providers.some((p) => platforms.has(p))) return false
+  if (item.kind !== 'youtube' && item.lang && !settings.languages.includes(item.lang)) return false
+  if (item.kind === 'youtube' && item.lang && !settings.languages.includes(item.lang)) return false
+  if ((settings.familySafe || who === 'kids' || who === 'family') && !item.safe) return false
+  return true
+}
+
+/**
+ * pick returns up to 3 suggestions.
+ * @param {object} catalog  catalog.json
+ * @param {object} store    local store (settings, history, seen, saved, weights)
+ * @param {{time:string, mood:string|null, who:string}} ask
+ * @param {() => number} rng injectable randomness for tests
+ */
+export function pick(catalog, store, ask, rng = Math.random) {
+  const slot = timeById(ask.time)
+  const w = { ...DEFAULT_WEIGHTS, ...(store.weights ?? {}) }
+  const { taken, liked, disliked, recentShown } = historySets(store)
+  const byId = new Map(catalog.items.map((it) => [it.id, it]))
+  const likedItems = liked.map((id) => byId.get(id)).filter(Boolean)
+  const dislikedItems = disliked.map((id) => byId.get(id)).filter(Boolean)
+
+  const candidates = []
+  const shortVideos = []
+  for (const item of catalog.items) {
+    if (taken.has(item.id) || !allowed(item, store.settings, ask.who)) continue
+    const rel = ask.mood ? item.moods?.[ask.mood] ?? 0 : 0.5
+    const f = fit(item, slot)
+    if (item.kind === 'youtube' && f.short && rel >= 0.15) shortVideos.push({ item, rel })
+    if (f.score <= 0 || f.short) continue
+    candidates.push(scoreOne(item, rel, f, w, likedItems, dislikedItems, recentShown))
+  }
+
+  // Two short videos that together fill the slot (the YouTube "double bill").
+  for (const combo of combos(shortVideos, slot)) {
+    candidates.push(scoreCombo(combo, w, likedItems, dislikedItems, recentShown, slot))
+  }
+
+  // Mood is a filter when there is enough to choose from, a preference otherwise.
+  let pool = candidates
+  let moodMatched = true
+  if (ask.mood) {
+    const strict = candidates.filter((c) => c.factors.r >= 0.2)
+    moodMatched = strict.length >= 3
+    pool = strict.length >= 6 ? strict : candidates
+  }
+  pool.sort((a, b) => b.score - a.score)
+
+  const picks = []
+  const cont = continuePick(store, byId, slot)
+  if (cont) picks.push(cont)
+  return { picks: diversify(pool, picks, 3, rng), poolSize: pool.length, moodMatched }
+}
+
+function personalOf(item, likedItems, dislikedItems) {
+  let best = null
+  let plus = 0
+  for (const l of likedItems) {
+    const s = simScore(item, l)
+    if (s > plus) {
+      plus = s
+      best = l
+    }
+  }
+  let minus = 0
+  for (const d of dislikedItems) minus = Math.max(minus, simScore(item, d))
+  return { value: plus - 0.7 * minus, because: best }
+}
+
+function scoreOne(item, rel, f, w, likedItems, dislikedItems, recentShown) {
+  const personal = personalOf(item, likedItems, dislikedItems)
+  const factors = { q: item.q ?? 0, r: rel, p: personal.value, g: item.gem ?? 0, f: f.score }
+  let score = FACTORS.reduce((s, k) => s + w[k] * factors[k], 0)
+  score -= 0.08 * (recentShown.get(item.id) ?? 0) // don't keep showing the same skipped title
+  return {
+    key: item.id, kind: item.kind === 'tv' ? 'episodes' : 'single', items: [item],
+    minutes: f.minutes, episodes: f.episodes, factors, score,
+    reason: reasonFor(item, factors, personal.because),
+  }
+}
+
+function combos(shorts, slot) {
+  shorts.sort((a, b) => (b.item.q + b.rel) - (a.item.q + a.rel))
+  const top = shorts.slice(0, 12)
+  const out = []
+  for (let i = 0; i < top.length; i++) {
+    for (let j = i + 1; j < top.length; j++) {
+      const a = top[i].item
+      const b = top[j].item
+      const total = a.runtime + b.runtime
+      if (total >= slot.lo && total <= slot.hi) out.push({ a: top[i], b: top[j], total })
+    }
+  }
+  out.sort((x, y) => (y.a.rel + y.b.rel + y.a.item.q + y.b.item.q) - (x.a.rel + x.b.rel + x.a.item.q + x.b.item.q))
+  return out.slice(0, 4)
+}
+
+function scoreCombo(c, w, likedItems, dislikedItems, recentShown, slot) {
+  const pa = personalOf(c.a.item, likedItems, dislikedItems)
+  const pb = personalOf(c.b.item, likedItems, dislikedItems)
+  const factors = {
+    q: (c.a.item.q + c.b.item.q) / 2,
+    r: (c.a.rel + c.b.rel) / 2,
+    p: Math.max(pa.value, pb.value),
+    g: ((c.a.item.gem ?? 0) + (c.b.item.gem ?? 0)) / 2,
+    f: 1 - Math.abs(slot.target - c.total) / slot.target * 0.6,
+  }
+  let score = FACTORS.reduce((s, k) => s + w[k] * factors[k], 0)
+  score -= 0.08 * ((recentShown.get(c.a.item.id) ?? 0) + (recentShown.get(c.b.item.id) ?? 0))
+  return {
+    key: `combo:${c.a.item.id}+${c.b.item.id}`, kind: 'combo', items: [c.a.item, c.b.item],
+    minutes: c.total, factors, score,
+    reason: 'Two short ones back to back that fill your time.',
+  }
+}
+
+// MMR (maximal marginal relevance): each next pick trades a little score for
+// being different from what's already chosen. The last slot explores.
+function diversify(pool, chosen, n, rng) {
+  const out = [...chosen]
+  const used = new Set(out.flatMap((p) => p.items.map((i) => i.id)))
+  const lambda = 0.7
+  while (out.length < n && pool.length) {
+    const explore = out.length === n - 1 && rng() < 0.35
+    const avail = pool.filter((c) => !c.items.some((i) => used.has(i.id)))
+    if (!avail.length) break
+    let next
+    if (explore && avail.length > 4) {
+      // Weighted random from ranks 3–25: a slightly adventurous pick.
+      const slice = avail.slice(3, 25)
+      const total = slice.reduce((s, c) => s + Math.max(c.score, 0.01), 0)
+      let r = rng() * total
+      next = slice.find((c) => (r -= Math.max(c.score, 0.01)) <= 0) ?? slice[0]
+      next = { ...next, explore: true, reason: next.reason + ' A bit different from your usual.' }
+    } else {
+      let best = -Infinity
+      for (const c of avail.slice(0, 60)) {
+        let maxSim = 0
+        for (const p of out) {
+          for (const a of c.items) {
+            for (const b of p.items) {
+              const s = Math.max(simScore(a, b), genreOverlap(a, b) * 0.5 + (a.kind === b.kind ? 0.15 : 0))
+              maxSim = Math.max(maxSim, s)
+            }
+          }
+        }
+        const mmr = lambda * c.score - (1 - lambda) * maxSim
+        if (mmr > best) {
+          best = mmr
+          next = c
+        }
+      }
+    }
+    out.push(next)
+    next.items.forEach((i) => used.add(i.id))
+  }
+  return out
+}
+
+// A series the family started and liked comes back as "continue" (it is in
+// the watched set, which is exactly why it gets its own path).
+function continuePick(store, byId, slot) {
+  const last = [...(store.history ?? [])].reverse().find((h) => h.status === 'picked' && h.ep)
+  if (!last || last.feedback === 'disliked' || last.feedback === 'unfinished') return null
+  if (Date.now() - last.at > 21 * 864e5) return null
+  const item = byId.get(last.id)
+  if (!item || item.kind !== 'tv') return null
+  const f = fit(item, slot)
+  if (!f.episodes) return null
+  const from = last.ep.to + 1
+  return {
+    key: `continue:${item.id}`, kind: 'continue', items: [item], minutes: f.minutes,
+    episodes: f.episodes, epFrom: from, factors: { q: item.q, r: 0, p: 1, g: item.gem, f: f.score }, score: 1,
+    reason: `Pick up where you left off: episodes ${from}–${from + f.episodes - 1}.`,
+  }
+}
+
+function reasonFor(item, f, because) {
+  if (because && f.p >= 0.3) return `Close to ${because.name}, which you liked.`
+  if (item.threads >= 3 && item.gem >= 0.6) return `A hidden gem: recommended in ${item.threads} threads, but not widely seen.`
+  if (item.platforms >= 2) return `People keep recommending it on Reddit and YouTube.`
+  if (item.threads >= 3) return `Recommended in ${item.threads} separate threads.`
+  if (item.kind === 'youtube' && item.channel) return `From ${item.channel}.`
+  if (f.r >= 0.5) return 'Matches the mood you picked.'
+  return 'Fits the time you have.'
+}
+
+// Feedback nudges the weights toward whatever drove a liked pick.
+export function updateWeights(weights, factors, feedback) {
+  const w = { ...DEFAULT_WEIGHTS, ...(weights ?? {}) }
+  if (!factors) return w
+  const sign = feedback === 'liked' ? 1 : -1
+  const mean = FACTORS.reduce((s, k) => s + (factors[k] ?? 0), 0) / FACTORS.length
+  for (const k of FACTORS) {
+    w[k] = Math.min(0.6, Math.max(0.03, w[k] + 0.04 * sign * ((factors[k] ?? 0) - mean)))
+  }
+  const sum = FACTORS.reduce((s, k) => s + w[k], 0)
+  for (const k of FACTORS) w[k] = Math.round((w[k] / sum) * 1000) / 1000
+  return w
+}
