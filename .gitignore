@@ -3,3 +3,4 @@ web/dist/
 data/state.json
 *.tmp
 .DS_Store
+.superpowers

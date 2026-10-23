@@ -1,4 +1,5 @@
 import { Back, Badge, External, IconButton, Poster } from '../components/ui.jsx'
+import { About, DetailBadges } from '../components/Details.jsx'
 import { openUrl, platformName } from './Results.jsx'
 
 // "Sounds good, not tonight": the family chooses from here themselves; the
@@ -53,8 +54,10 @@ export default function Watchlist({ store, go, byId, onWatch, onRemove }) {
                   {item.name}
                   {item.year ? <span className="font-normal text-muted"> ({item.year})</span> : null}
                 </h2>
+                <DetailBadges item={item} />
               </div>
             </div>
+            <About item={item} />
             <div className="grid grid-cols-[1fr_auto] gap-2">
               <a
                 href={openUrl(item, platform)}

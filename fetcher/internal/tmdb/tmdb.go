@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -226,18 +227,25 @@ type details struct {
 			Rating  string `json:"rating"`
 		} `json:"results"`
 	} `json:"content_ratings"`
+	Credits struct {
+		Cast []struct {
+			Name  string `json:"name"`
+			Order int    `json:"order"`
+		} `json:"cast"`
+	} `json:"credits"`
 }
 
-// Enrich loads runtime, keywords, region providers and certification into t.
+// Enrich loads runtime, keywords, region providers, certification and the
+// top-billed cast into t.
 func (c *Client) Enrich(ctx context.Context, t *model.Title) error {
 	parts := strings.Split(t.ID, ":")
 	if len(parts) != 3 || parts[0] != "tmdb" {
 		return nil
 	}
 	kind, id := parts[1], parts[2]
-	extra := "keywords,watch/providers,release_dates"
+	extra := "keywords,watch/providers,release_dates,credits"
 	if kind == "tv" {
-		extra = "keywords,watch/providers,content_ratings"
+		extra = "keywords,watch/providers,content_ratings,credits"
 	}
 	var d details
 	if err := c.get(ctx, "/"+kind+"/"+id, url.Values{"append_to_response": {extra}}, &d); err != nil {
@@ -296,6 +304,17 @@ func (c *Client) Enrich(ctx context.Context, t *model.Title) error {
 	for _, r := range d.ContentRatings.Results {
 		if r.Country == c.region && r.Rating != "" {
 			t.Certification = r.Rating
+		}
+	}
+	cast := d.Credits.Cast
+	sort.SliceStable(cast, func(i, j int) bool { return cast[i].Order < cast[j].Order })
+	t.Cast = nil
+	for _, m := range cast {
+		if len(t.Cast) == 3 {
+			break
+		}
+		if m.Name != "" {
+			t.Cast = append(t.Cast, m.Name)
 		}
 	}
 	return nil

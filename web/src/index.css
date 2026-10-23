@@ -16,6 +16,8 @@
   --color-accent-ink: #8A2E07;
   --color-good: #0B4F49;
   --color-good-bg: #E6F2F0;
+  --color-star: #6B4A06;
+  --color-star-bg: #FBF0D9;
 }
 
 html, body, #root { height: 100%; }

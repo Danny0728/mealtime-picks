@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strings"
 	"testing"
 	"time"
 
@@ -80,6 +81,35 @@ func TestEndToEnd(t *testing.T) {
 	}
 	if bb.Safe {
 		t.Errorf("uncertified crime drama should not be family-safe by default")
+	}
+}
+
+func TestCatalogCarriesCardDetails(t *testing.T) {
+	_, st := world(t)
+	pan := st.Titles["tmdb:tv:2"]
+	pan.Title.Overview = "A city graduate becomes secretary of a village panchayat. " + strings.Repeat("He slowly settles in and the village grows on him. ", 10)
+	pan.Title.Certification = "UA 13+"
+	pan.Title.Cast = []string{"Jitendra Kumar", "Raghubir Yadav", "Neena Gupta"}
+	st.Titles["tmdb:tv:3"].Title.VoteCount = 12 // too few votes to show a rating
+	st.Upsert(model.Title{ID: "yt:abc", Kind: "youtube", Name: "Stand-up set", Runtime: 20, Overview: "Links: http://…", Channel: "Comic", ViewCount: 900000, LikeCount: 40000, Providers: []string{"youtube"}})
+
+	cat := BuildCatalog(st, Stats{}, "IN", time.Unix(1_790_000_000, 0), 8, 90)
+	byID := map[string]Item{}
+	for _, it := range cat.Items {
+		byID[it.ID] = it
+	}
+	p := byID["tmdb:tv:2"]
+	if p.Rating != 8 || p.Votes != 300 || p.Cert != "UA 13+" || len(p.Cast) != 3 {
+		t.Errorf("details missing: %+v", p)
+	}
+	if len(p.Overview) > 300 || !strings.HasPrefix(p.Overview, "A city graduate") || !strings.HasSuffix(p.Overview, ".") {
+		t.Errorf("long overviews should be cut at a sentence end within 300 chars, got %d chars: %q", len(p.Overview), p.Overview)
+	}
+	if g := byID["tmdb:tv:3"]; g.Rating != 0 {
+		t.Errorf("a rating from 12 votes shouldn't be shown, got %.1f", g.Rating)
+	}
+	if y, ok := byID["yt:abc"]; !ok || y.Overview != "" || y.Views != 900000 {
+		t.Errorf("YouTube should carry views but no description: %+v", y)
 	}
 }
 
