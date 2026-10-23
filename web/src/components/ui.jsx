@@ -7,7 +7,7 @@ export function Chip({ on, onClick, children }) {
       aria-pressed={on}
       onClick={onClick}
       className={`inline-flex min-h-11 items-center justify-center rounded-full border px-4 text-[15px] font-medium transition-colors ${
-        on ? 'border-ink bg-ink text-white' : 'border-line bg-card text-ink'
+        on ? 'border-sel bg-sel font-semibold text-sel-ink' : 'border-line bg-card text-soft'
       }`}
     >
       {children}

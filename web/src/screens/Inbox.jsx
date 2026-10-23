@@ -67,7 +67,7 @@ export default function InboxScreen({ store, update, go, catalog, byId, incoming
               />
             </label>
           ))}
-          <button type="button" onClick={saveIt} className="min-h-[52px] rounded-2xl bg-accent text-base font-semibold text-white">
+          <button type="button" onClick={saveIt} className="min-h-[52px] rounded-2xl bg-linear-to-b from-cta-from to-cta-to text-base font-semibold text-cta-ink">
             Save
           </button>
         </section>

@@ -42,7 +42,7 @@ export default function Setup({ store, update, go, catalog }) {
           <p className="text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">One-time setup</p>
           <h1 className="font-display text-[28px] leading-[1.1] font-bold">Your household</h1>
         </div>
-        <button type="button" onClick={done} className="min-h-11 rounded-xl bg-ink px-[18px] text-[15px] font-semibold text-white">
+        <button type="button" onClick={done} className="min-h-11 rounded-xl bg-primary px-[18px] text-[15px] font-semibold text-primary-ink">
           Done
         </button>
       </header>

@@ -36,7 +36,7 @@ export default function PickScreen({ store, go, catalog, byId, onPick, onFeedbac
           <IconButton label={`Watchlist (${store.watchlist.length})`} onClick={() => go('watchlist')}>
             <Bookmark size={20} />
             {store.watchlist.length > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 min-w-5 rounded-full bg-accent px-1 text-center text-[11px] leading-5 font-bold text-white">
+              <span className="absolute -top-1.5 -right-1.5 min-w-5 rounded-full bg-linear-to-b from-cta-from to-cta-to px-1 text-center text-[11px] leading-5 font-bold text-cta-ink">
                 {store.watchlist.length}
               </span>
             )}
@@ -103,7 +103,7 @@ export default function PickScreen({ store, go, catalog, byId, onPick, onFeedbac
           type="button"
           disabled={!ready || !store.settings.platforms.length}
           onClick={() => onPick(ask)}
-          className="flex min-h-[58px] items-center justify-center gap-2.5 rounded-2xl bg-accent text-lg font-semibold text-white disabled:opacity-50"
+          className="flex min-h-[58px] items-center justify-center gap-2.5 rounded-2xl bg-linear-to-b from-cta-from to-cta-to text-lg font-bold text-cta-ink shadow-[0_10px_30px_rgba(242,181,68,0.25)] disabled:opacity-50"
         >
           <Play /> {ready ? 'Pick 3 for us' : 'Loading…'}
         </button>

@@ -108,7 +108,7 @@ export default function Results({ store, go, results, onPicked, onSeen, onLater,
                   target="_blank"
                   rel="noreferrer"
                   onClick={() => onPicked(p)}
-                  className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-ink px-2 text-sm font-semibold text-white"
+                  className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-2 text-sm font-semibold text-primary-ink"
                 >
                   {p.kind === 'combo' ? 'Play first' : `Open ${platformName(platform)}`} <External />
                 </a>
@@ -137,7 +137,7 @@ export default function Results({ store, go, results, onPicked, onSeen, onLater,
       <button
         type="button"
         onClick={onShuffle}
-        className="flex min-h-[52px] items-center justify-center gap-2 rounded-2xl border border-accent bg-card text-base font-semibold text-accent"
+        className="flex min-h-[52px] items-center justify-center gap-2 rounded-2xl border border-gold bg-card text-base font-semibold text-gold"
       >
         <Shuffle /> Shuffle for 3 new ones
       </button>

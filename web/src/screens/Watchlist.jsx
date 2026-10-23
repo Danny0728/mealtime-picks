@@ -64,7 +64,7 @@ export default function Watchlist({ store, go, byId, onWatch, onRemove }) {
                 target="_blank"
                 rel="noreferrer"
                 onClick={() => onWatch(w.id)}
-                className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-ink px-2 text-sm font-semibold text-white"
+                className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-2 text-sm font-semibold text-primary-ink"
               >
                 Open {platformName(platform)} <External />
               </a>
