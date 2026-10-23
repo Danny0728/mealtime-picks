@@ -41,7 +41,7 @@ export function emptyStore() {
     saved: [],
     watchlist: [], // { id, name, at }: sounds good, not tonight; kept out of the picks
     weights: null,
-    lastAsk: { time: '45', mood: 'feelgood', who: 'family' },
+    lastAsk: { time: '45', moods: ['feelgood'], who: 'family' },
   }
 }
 
@@ -76,8 +76,15 @@ export function normalize(s) {
     seenRatings: s?.seenRatings && typeof s.seenRatings === 'object' && !Array.isArray(s.seenRatings) ? s.seenRatings : {},
     saved: Array.isArray(s?.saved) ? s.saved : [],
     watchlist: Array.isArray(s?.watchlist) ? s.watchlist : [],
-    lastAsk: { ...base.lastAsk, ...(s?.lastAsk ?? {}) },
+    lastAsk: normalizeAsk({ ...base.lastAsk, ...(s?.lastAsk ?? {}) }),
   }
+}
+
+// Older saves had one `mood`; it's a list now (several moods mean any of them).
+function normalizeAsk(a) {
+  const { mood, ...rest } = a
+  if (Array.isArray(a.moods) && !('mood' in a)) return a
+  return { ...rest, moods: mood ? [mood] : [] }
 }
 
 export function exportBackup(store) {

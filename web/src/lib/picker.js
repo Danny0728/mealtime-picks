@@ -28,6 +28,12 @@ export const DEFAULT_WEIGHTS = { q: 0.3, r: 0.25, p: 0.2, g: 0.15, f: 0.1 }
 
 const FACTORS = ['q', 'r', 'p', 'g', 'f']
 
+// The moods asked for; older saved asks carry a single `mood`.
+export function moodsOf(ask) {
+  if (Array.isArray(ask?.moods)) return ask.moods
+  return ask?.mood ? [ask.mood] : []
+}
+
 export function timeById(id) {
   return TIMES.find((t) => t.id === id) ?? TIMES[2]
 }
@@ -102,7 +108,7 @@ function allowed(item, settings, who) {
  * pick returns up to 3 suggestions.
  * @param {object} catalog  catalog.json
  * @param {object} store    local store (settings, history, seen, saved, weights)
- * @param {{time:string, mood:string|null, who:string}} ask
+ * @param {{time:string, moods:string[], who:string}} ask  several moods mean any of them
  * @param {() => number} rng injectable randomness for tests
  * @param {object[]} keep  picks already on screen to keep; only the free slots are filled
  */
@@ -114,15 +120,25 @@ export function pick(catalog, store, ask, rng = Math.random, keep = null) {
   const items = (ids) => ids.map((id) => byId.get(id)).filter(Boolean)
   const taste = { liked: items(liked), disliked: items(disliked), saved: items(saved) }
 
+  const moods = moodsOf(ask)
   const candidates = []
   const shortVideos = []
   for (const item of catalog.items) {
     if (taken.has(item.id) || !allowed(item, store.settings, ask.who)) continue
-    const rel = ask.mood ? item.moods?.[ask.mood] ?? 0 : 0.5
+    // Any of the chosen moods: an item is as relevant as its best match.
+    let rel = moods.length ? 0 : 0.5
+    let mood = null
+    for (const m of moods) {
+      const v = item.moods?.[m] ?? 0
+      if (v > rel) {
+        rel = v
+        mood = m
+      }
+    }
     const f = fit(item, slot)
     if (item.kind === 'youtube' && f.short && rel >= 0.15) shortVideos.push({ item, rel })
     if (f.score <= 0 || f.short) continue
-    candidates.push(scoreOne(item, rel, f, w, taste, recentShown))
+    candidates.push({ ...scoreOne(item, rel, f, w, taste, recentShown), mood: moods.length > 1 ? mood : null })
   }
 
   // Two short videos that together fill the slot (the YouTube "double bill").
@@ -133,7 +149,7 @@ export function pick(catalog, store, ask, rng = Math.random, keep = null) {
   // Mood is a filter when there is enough to choose from, a preference otherwise.
   let pool = candidates
   let moodMatched = true
-  if (ask.mood) {
+  if (moods.length) {
     const strict = candidates.filter((c) => c.factors.r >= 0.2)
     moodMatched = strict.length >= 3
     pool = strict.length >= 6 ? strict : candidates
@@ -245,6 +261,8 @@ function diversify(pool, chosen, n, rng) {
               maxSim = Math.max(maxSim, s)
             }
           }
+          // With several moods asked for, spread the picks across them.
+          if (c.mood && c.mood === p.mood) maxSim = Math.max(maxSim, 0.5)
         }
         const mmr = lambda * c.score - (1 - lambda) * maxSim
         if (mmr > best) {

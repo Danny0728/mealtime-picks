@@ -9,7 +9,10 @@ const DAY = 864e5
 export default function PickScreen({ store, go, catalog, byId, onPick, onFeedback }) {
   const [ask, setAsk] = useState(store.lastAsk)
   const [thanks, setThanks] = useState(null)
-  const set = (k, v) => setAsk((a) => ({ ...a, [k]: a[k] === v && k === 'mood' ? null : v }))
+  const set = (k, v) => setAsk((a) => ({ ...a, [k]: v }))
+  // Moods are a multi-select: several mean any of them.
+  const toggleMood = (m) =>
+    setAsk((a) => ({ ...a, moods: a.moods.includes(m) ? a.moods.filter((x) => x !== m) : [...a.moods, m] }))
 
   // The most recent pick nobody has rated yet (within a week).
   const pending = [...store.history]
@@ -84,10 +87,11 @@ export default function PickScreen({ store, go, catalog, byId, onPick, onFeedbac
         </div>
       </Section>
 
-      <Section title="Mood">
+      <Section title="Mood" hint="Pick any you're up for, or none for anything.">
+
         <div className="flex flex-wrap gap-2">
           {MOODS.map((m) => (
-            <Chip key={m.id} on={ask.mood === m.id} onClick={() => set('mood', m.id)}>{m.label}</Chip>
+            <Chip key={m.id} on={ask.moods.includes(m.id)} onClick={() => toggleMood(m.id)}>{m.label}</Chip>
           ))}
         </div>
       </Section>
