@@ -140,6 +140,12 @@ func Load(path string) (*State, error) {
 	if s.Instagram.CoTags == nil {
 		s.Instagram.CoTags = map[string]int{}
 	}
+	// Terms is omitted when empty, so it comes back nil.
+	for _, ts := range s.Titles {
+		if ts.Terms == nil {
+			ts.Terms = map[string]int{}
+		}
+	}
 	return s, nil
 }
 
