@@ -51,20 +51,26 @@ export const tints = [
   ['#EFE3C8', '#6B4A06'],
 ]
 
-export function Poster({ item, count = 1 }) {
+const posterSizes = {
+  md: 'h-[104px] w-[78px]',
+  lg: 'h-[138px] w-[92px] shadow-xl shadow-black/40',
+}
+
+export function Poster({ item, count = 1, size = 'md' }) {
   const [bg, fg] = tints[hash(item.id) % tints.length]
+  const dims = posterSizes[size] ?? posterSizes.md
   if (item.poster) {
     return (
       <img
         src={item.poster}
         alt=""
         loading="lazy"
-        className="h-[104px] w-[78px] shrink-0 rounded-[10px] bg-chip object-cover"
+        className={`${dims} shrink-0 rounded-[10px] bg-chip object-cover`}
       />
     )
   }
   return (
-    <div className="flex h-[104px] w-[78px] shrink-0 flex-col items-center justify-center gap-1 rounded-[10px]" style={{ background: bg, color: fg }}>
+    <div className={`${dims} flex shrink-0 flex-col items-center justify-center gap-1 rounded-[10px]`} style={{ background: bg, color: fg }}>
       <Play size={24} />
       {count > 1 && <span className="text-xs font-bold">× {count}</span>}
     </div>

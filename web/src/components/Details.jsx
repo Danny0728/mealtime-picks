@@ -12,7 +12,7 @@ export function DetailBadges({ item }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {item.rating ? (
-        <span className="rounded-md bg-star-bg px-2 py-0.5 text-xs font-semibold text-star" title={`${item.votes} votes on TMDB`}>
+        <span className="rounded-md bg-gold/15 px-2 py-0.5 text-xs font-semibold text-gold" title={`${item.votes} votes on TMDB`}>
           ★ {item.rating.toFixed(1)} TMDB
         </span>
       ) : null}

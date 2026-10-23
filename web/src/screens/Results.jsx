@@ -34,7 +34,7 @@ export default function Results({ store, go, results, onPicked, onSeen, onLater,
       <header className="flex items-center gap-3">
         <IconButton label="Back" onClick={() => go('pick')}><Back /></IconButton>
         <div>
-          <h1 className="font-display text-[26px] leading-[1.1] font-bold">
+          <h1 className="font-display text-[34px] leading-none tracking-[0.02em]">
             {picks.length ? `Here ${picks.length === 1 ? 'is 1' : `are ${picks.length}`}` : 'Nothing fits yet'}
           </h1>
           <p className="text-sm text-muted">{summary}</p>
@@ -64,24 +64,31 @@ export default function Results({ store, go, results, onPicked, onSeen, onLater,
               ? `Episode${p.episodes > 1 ? `s 1–${p.episodes}` : ' 1'}`
               : null
         return (
-          <article key={p.key} className="flex flex-col gap-3 rounded-[18px] border border-hair bg-card p-3">
+          <article key={p.key} className="relative isolate flex flex-col gap-3 overflow-hidden rounded-[22px] border border-hair bg-card p-3.5">
+            {/* Lit by its own poster: a blurred copy behind, a veil so text stays readable. */}
+            {main.poster && p.kind !== 'combo' && (
+              <>
+                <div aria-hidden="true" className="card-glow absolute -inset-5 -z-10 bg-cover bg-center" style={{ backgroundImage: `url(${main.poster})` }} />
+                <div aria-hidden="true" className="card-veil absolute inset-0 -z-10" />
+              </>
+            )}
             <div className="flex gap-3">
-              <Poster item={main} count={p.items.length} />
+              <Poster item={main} count={p.items.length} size="lg" />
               <div className="flex min-w-0 flex-col gap-1.5">
                 <div className="flex flex-wrap gap-1.5">
                   <Badge>{platformName(platform)}</Badge>
                   {p.minutes ? <Badge>{p.kind === 'combo' ? `~${p.minutes} min total` : `${p.minutes} min`}</Badge> : null}
                   {when && <Badge>{when}</Badge>}
                 </div>
-                <h2 className="text-[17px] leading-tight font-semibold">
+                <h2 className="text-[19px] leading-tight font-bold">
                   {title}
-                  {main.year && p.kind !== 'combo' ? <span className="font-normal text-muted"> ({main.year})</span> : null}
+                  {main.year && p.kind !== 'combo' ? <span className="font-normal text-soft"> ({main.year})</span> : null}
                 </h2>
                 {p.kind !== 'combo' && <DetailBadges item={main} />}
               </div>
             </div>
             {p.kind !== 'combo' && <About item={main} />}
-            <p className="text-sm leading-snug text-soft">{p.reason}</p>
+            <p className="text-[13px] leading-snug font-medium text-gold">★ {p.reason}</p>
             {rating === p.key ? (
               <div className="flex flex-col gap-2">
                 <p className="text-sm font-semibold">How was it?</p>
@@ -91,7 +98,7 @@ export default function Results({ store, go, results, onPicked, onSeen, onLater,
                       key={r.id}
                       type="button"
                       onClick={() => { setRating(null); onSeen(p, r.id) }}
-                      className="min-h-11 rounded-xl border border-line bg-card px-1 text-sm font-semibold"
+                      className="min-h-11 rounded-xl border border-line bg-card/50 px-1 text-sm backdrop-blur-md font-semibold"
                     >
                       {r.label}
                     </button>
@@ -115,14 +122,14 @@ export default function Results({ store, go, results, onPicked, onSeen, onLater,
                 <button
                   type="button"
                   onClick={() => setRating(p.key)}
-                  className="min-h-11 rounded-xl border border-line bg-card px-3 text-sm font-semibold"
+                  className="min-h-11 rounded-xl border border-line bg-card/50 px-3 text-sm backdrop-blur-md font-semibold"
                 >
                   Seen it
                 </button>
                 <button
                   type="button"
                   onClick={() => onLater(p)}
-                  className="flex min-h-11 items-center gap-1 rounded-xl border border-line bg-card px-3 text-sm font-semibold"
+                  className="flex min-h-11 items-center gap-1 rounded-xl border border-line bg-card/50 px-3 text-sm backdrop-blur-md font-semibold"
                 >
                   <Bookmark /> Later
                 </button>
@@ -141,6 +148,7 @@ export default function Results({ store, go, results, onPicked, onSeen, onLater,
       >
         <Shuffle /> Shuffle for 3 new ones
       </button>
+      <p className="text-center text-xs text-muted">Title data and images from TMDB</p>
     </main>
   )
 }
