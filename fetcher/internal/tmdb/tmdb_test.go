@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -29,6 +30,30 @@ const tvDetails = `{
   "watch/providers": {"results": {"IN": {"flatrate": [{"provider_id": 119, "provider_name": "Amazon Prime Video"}]}}},
   "content_ratings": {"results": [{"iso_3166_1": "IN", "rating": "UA 13+"}]}
 }`
+
+func TestDiscoverPools(t *testing.T) {
+	var got []url.Values
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = append(got, r.URL.Query())
+		w.Write([]byte(`{"page":1,"total_pages":1,"results":[{"id":7,"name":"Death's Game","original_language":"ko"}]}`))
+	}))
+	defer srv.Close()
+	BaseURL = srv.URL
+	c := New("tok", "IN")
+
+	if _, err := c.Discover(context.Background(), "tv", Pool{}, 1); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := c.Discover(context.Background(), "tv", Pool{Lang: "ja", Genres: "16"}, 1); err != nil {
+		t.Fatal(err)
+	}
+	if world := got[0]; world.Has("with_original_language") || world.Has("with_genres") || world.Get("watch_region") != "IN" {
+		t.Errorf("the world pool should be any language streaming in the region: %v", world)
+	}
+	if anime := got[1]; anime.Get("with_original_language") != "ja" || anime.Get("with_genres") != "16" {
+		t.Errorf("the anime pool should be Japanese animation: %v", anime)
+	}
+}
 
 func TestEnrich(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

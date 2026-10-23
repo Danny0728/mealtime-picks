@@ -9,6 +9,10 @@ import (
 
 type Budgets struct {
 	TMDBPoolPagesPerLanguage int `json:"tmdbPoolPagesPerLanguage"`
+	// Beyond the home languages: subtitles are fine for the right title.
+	WorldPoolPages           int `json:"worldPoolPages"`  // most-voted, any language
+	KoreanPoolPages          int `json:"koreanPoolPages"` // K-dramas and Korean films
+	AnimePoolPages           int `json:"animePoolPages"`  // Japanese animation
 	TMDBSearchResolves       int `json:"tmdbSearchResolves"`
 	TMDBDetails              int `json:"tmdbDetails"`
 	RedditQueries            int `json:"redditQueries"`

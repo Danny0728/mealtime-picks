@@ -120,18 +120,29 @@ func (c *Client) toTitle(kind string, it listItem) model.Title {
 	return t
 }
 
-// Discover returns titles in a language that stream in the region, most-voted first.
-// This is the gazetteer pool the extractor matches comments against.
-func (c *Client) Discover(ctx context.Context, kind, lang string, pages int) ([]model.Title, error) {
+// Pool narrows a discover query; an empty field means any.
+type Pool struct {
+	Lang   string // original language, e.g. "ko"
+	Genres string // TMDB genre ids, e.g. "16" for animation
+}
+
+// Discover returns titles in a pool that stream in the region, most-voted
+// first. This is the gazetteer pool the extractor matches comments against.
+func (c *Client) Discover(ctx context.Context, kind string, pool Pool, pages int) ([]model.Title, error) {
 	var out []model.Title
 	for p := 1; p <= pages; p++ {
 		q := url.Values{
-			"with_original_language":        {lang},
 			"watch_region":                  {c.region},
 			"with_watch_monetization_types": {"flatrate|free|ads"},
 			"sort_by":                       {"vote_count.desc"},
 			"include_adult":                 {"false"},
 			"page":                          {strconv.Itoa(p)},
+		}
+		if pool.Lang != "" {
+			q.Set("with_original_language", pool.Lang)
+		}
+		if pool.Genres != "" {
+			q.Set("with_genres", pool.Genres)
 		}
 		var r listResp
 		if err := c.get(ctx, "/discover/"+kind, q, &r); err != nil {

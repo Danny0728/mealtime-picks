@@ -35,9 +35,9 @@ export default function PickScreen({ store, go, catalog, byId, onPick, onFeedbac
     : 'Pick your platforms in setup first'
 
   return (
-    <main className="relative isolate flex min-h-full flex-1 flex-col gap-[22px] overflow-hidden px-5 pt-6 pb-7">
-      <div className="absolute inset-0 -z-10"><PosterWall posters={posters} /></div>
-      <header className="flex items-center justify-between gap-3">
+    <main className="relative isolate flex min-h-full flex-1 flex-col gap-[22px] overflow-hidden px-5 pt-6 pb-7 lg:grid lg:min-h-screen lg:grid-cols-[1fr_400px] lg:grid-rows-[auto_1fr] lg:gap-x-16 lg:overflow-visible lg:px-14 lg:py-10">
+      <div className="absolute inset-0 -z-10 lg:fixed"><PosterWall posters={posters} /></div>
+      <header className="flex items-center justify-between gap-3 lg:col-span-2">
         <p className="font-display text-xl tracking-[0.14em] text-gold">MEALTIME PICKS</p>
         <div className="flex gap-2">
           <IconButton label={`Watchlist (${store.watchlist.length})`} onClick={() => go('watchlist')}>
@@ -53,12 +53,15 @@ export default function PickScreen({ store, go, catalog, byId, onPick, onFeedbac
         </div>
       </header>
 
-      <div className="mt-[150px] flex flex-col gap-1.5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold">Tonight's showing</p>
-        <h1 className="font-display text-[52px] leading-[0.92] [text-shadow:0_4px_24px_var(--color-ground)]">
+      <div className="mt-[150px] flex flex-col gap-1.5 lg:col-start-1 lg:row-start-2 lg:mt-0 lg:self-end lg:pb-4">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold lg:text-[13px]">Tonight's showing</p>
+        <h1 className="font-display text-[52px] leading-[0.92] [text-shadow:0_4px_24px_var(--color-ground)] lg:text-[104px] lg:leading-[0.86]">
           What are we<br />watching?
         </h1>
       </div>
+
+      {/* Phones: these flow in the page as before. Laptops: the right-hand column. */}
+      <div className="contents lg:col-start-2 lg:row-start-2 lg:flex lg:flex-col lg:justify-center lg:gap-[22px]">
 
       {pendingItem && !thanks && (
         <div className="flex flex-col gap-3 rounded-2xl border border-hair bg-card p-4">
@@ -88,7 +91,6 @@ export default function PickScreen({ store, go, catalog, byId, onPick, onFeedbac
       </Section>
 
       <Section title="Mood" hint="Pick any you're up for, or none for anything.">
-
         <div className="flex flex-wrap gap-2">
           {MOODS.map((m) => (
             <Chip key={m.id} on={ask.moods.includes(m.id)} onClick={() => toggleMood(m.id)}>{m.label}</Chip>
@@ -104,7 +106,7 @@ export default function PickScreen({ store, go, catalog, byId, onPick, onFeedbac
         </div>
       </Section>
 
-      <div className="flex-1" />
+      <div className="flex-1 lg:hidden" />
 
       <div className="flex flex-col gap-2.5">
         {catalog.status === 'error' && (
@@ -122,6 +124,7 @@ export default function PickScreen({ store, go, catalog, byId, onPick, onFeedbac
         >
           <Play /> {ready ? 'Pick 3 for us' : 'Loading…'}
         </button>
+      </div>
       </div>
     </main>
   )

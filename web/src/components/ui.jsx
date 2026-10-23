@@ -54,6 +54,8 @@ export const tints = [
 const posterSizes = {
   md: 'h-[104px] w-[78px]',
   lg: 'h-[138px] w-[92px] shadow-xl shadow-black/40',
+  // Phones: the lg thumbnail. Laptops: full card width on top (cards sit in columns).
+  card: 'h-[138px] w-[92px] shadow-xl shadow-black/40 lg:aspect-[2/3] lg:h-auto lg:w-full',
 }
 
 export function Poster({ item, count = 1, size = 'md' }) {

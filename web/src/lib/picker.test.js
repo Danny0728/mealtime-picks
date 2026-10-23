@@ -27,8 +27,39 @@ test('filters platforms, language, safety and already-seen', () => {
     item('unsafe', { safe: false }),
     item('seen'),
   ] }
-  const { picks } = pick(cat, store({ seen: ['seen'] }), { time: '45', mood: null, who: 'family' }, seq(0.9))
+  const s = store({ seen: ['seen'] })
+  s.settings.otherLanguages = false
+  const { picks } = pick(cat, s, { time: '45', mood: null, who: 'family' }, seq(0.9))
   assert.deepEqual(picks.map((p) => p.items[0].id), ['ok'])
+})
+
+test('other languages are allowed, but yours win a tie', () => {
+  const cat = { items: [item('korean', { lang: 'ko', genres: ['Drama'] }), item('hindi', { genres: ['Comedy'] })] }
+  const { picks } = pick(cat, store(), { time: '45', moods: [], who: 'adults' }, seq(0.9))
+  assert.deepEqual(picks.map((p) => p.items[0].id), ['hindi', 'korean'])
+})
+
+test('a standout subtitled title beats an average one in your language', () => {
+  const cat = { items: [item('parasite', { lang: 'ko', q: 0.9, gem: 0.9, genres: ['Thriller'] }), item('hindi', { genres: ['Comedy'] })] }
+  const { picks } = pick(cat, store(), { time: '45', moods: [], who: 'adults' }, seq(0.9))
+  assert.equal(picks[0].items[0].id, 'parasite')
+})
+
+test('turning other languages off brings back the strict filter', () => {
+  const cat = { items: [item('parasite', { lang: 'ko', q: 0.9 }), item('hindi')] }
+  const s = store()
+  s.settings.otherLanguages = false
+  const { picks } = pick(cat, s, { time: '45', moods: [], who: 'adults' }, seq(0.9))
+  assert.deepEqual(picks.map((p) => p.items[0].id), ['hindi'])
+})
+
+test('the Anime mood finds anime even though Japanese is not one of your languages', () => {
+  const cat = { items: [
+    item('deathnote', { lang: 'ja', moods: { anime: 1 }, genres: ['Animation'] }),
+    ...['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].map((id) => item(id, { moods: { funny: 0.8 } })),
+  ] }
+  const { picks } = pick(cat, store(), { time: '45', moods: ['anime'], who: 'adults' }, seq(0.9))
+  assert.equal(picks[0].items[0].id, 'deathnote')
 })
 
 test('three different picks, best first', () => {

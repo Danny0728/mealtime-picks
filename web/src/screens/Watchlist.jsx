@@ -9,7 +9,7 @@ export default function Watchlist({ store, go, byId, onWatch, onRemove }) {
   const entries = [...store.watchlist].sort((a, b) => b.at - a.at)
 
   return (
-    <main className="flex flex-1 flex-col gap-4 px-5 pt-6 pb-7">
+    <main className="flex flex-1 flex-col gap-4 px-5 pt-6 pb-7 lg:px-10 lg:pt-10">
       <header className="flex items-center gap-3">
         <IconButton label="Back" onClick={() => go('pick')}><Back /></IconButton>
         <div>
@@ -24,6 +24,7 @@ export default function Watchlist({ store, go, byId, onWatch, onRemove }) {
         </p>
       )}
 
+      <div className="contents lg:grid lg:grid-cols-3 lg:items-start lg:gap-5">
       {entries.map((w) => {
         const item = byId.get(w.id)
         const platform = item?.providers.find((x) => mine.has(x))
@@ -43,8 +44,8 @@ export default function Watchlist({ store, go, byId, onWatch, onRemove }) {
         const size = item.kind === 'tv' ? `${item.epMin || 30} min episodes` : item.runtime ? `${item.runtime} min` : null
         return (
           <article key={w.id} className="flex flex-col gap-3 rounded-[18px] border border-hair bg-card p-3">
-            <div className="flex gap-3">
-              <Poster item={item} size="lg" />
+            <div className="flex gap-3 lg:flex-col">
+              <Poster item={item} size="card" />
               <div className="flex min-w-0 flex-col gap-1.5">
                 <div className="flex flex-wrap gap-1.5">
                   <Badge>{platformName(platform)}</Badge>
@@ -54,7 +55,7 @@ export default function Watchlist({ store, go, byId, onWatch, onRemove }) {
                   {item.name}
                   {item.year ? <span className="font-normal text-muted"> ({item.year})</span> : null}
                 </h2>
-                <DetailBadges item={item} />
+                <DetailBadges item={item} languages={store.settings.languages} />
               </div>
             </div>
             <About item={item} />
@@ -75,6 +76,7 @@ export default function Watchlist({ store, go, byId, onWatch, onRemove }) {
           </article>
         )
       })}
+      </div>
     </main>
   )
 }

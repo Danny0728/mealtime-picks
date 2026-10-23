@@ -84,6 +84,46 @@ func TestEndToEnd(t *testing.T) {
 	}
 }
 
+func TestPoolsReachBeyondHomeLanguages(t *testing.T) {
+	b := config.Budgets{TMDBPoolPagesPerLanguage: 10, WorldPoolPages: 6, KoreanPoolPages: 4, AnimePoolPages: 8}
+	got := map[string]int{}
+	for _, p := range pools(b, []string{"hi", "en"}) {
+		got[p.Pool.Lang+"/"+p.Pool.Genres] = p.Pages
+	}
+	want := map[string]int{"hi/": 10, "en/": 10, "/": 6, "ko/": 4, "ja/16": 8}
+	if fmt.Sprint(got) != fmt.Sprint(want) {
+		t.Errorf("pools = %v, want %v", got, want)
+	}
+	// A pool with no budget is skipped, and a home language isn't fetched twice.
+	for _, p := range pools(config.Budgets{TMDBPoolPagesPerLanguage: 10, KoreanPoolPages: 4}, []string{"ko"}) {
+		if p.Pool.Lang == "" || p.Pages != 10 {
+			t.Errorf("unexpected pool %+v", p)
+		}
+	}
+}
+
+func TestAnimeGetsTheAnimeMood(t *testing.T) {
+	_, st := world(t)
+	a := title("tmdb:tv:9", "tv", "Death Note", 4000, "Animation", "Mystery")
+	a.Lang = "ja"
+	st.Upsert(a)
+	k := title("tmdb:tv:10", "tv", "Death's Game", 900, "Drama")
+	k.Lang = "ko"
+	st.Upsert(k)
+
+	cat := BuildCatalog(st, Stats{}, "IN", time.Unix(1_790_000_000, 0), 8, 90)
+	byID := map[string]Item{}
+	for _, it := range cat.Items {
+		byID[it.ID] = it
+	}
+	if got := byID["tmdb:tv:9"].Moods["anime"]; got != 1 {
+		t.Errorf("Japanese animation should be anime, got mood %.2f", got)
+	}
+	if got := byID["tmdb:tv:10"].Moods["anime"]; got != 0 {
+		t.Errorf("a Korean drama isn't anime, got mood %.2f", got)
+	}
+}
+
 func TestCatalogCarriesCardDetails(t *testing.T) {
 	_, st := world(t)
 	pan := st.Titles["tmdb:tv:2"]

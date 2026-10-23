@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { wallPosters, wallRows } from './wall.js'
+import { WALL_PER_ROW, WALL_POSTERS, WALL_ROWS, wallPosters, wallRows } from './wall.js'
 
 const it = (id, o) => ({ id, kind: 'movie', poster: `https://image.tmdb.org/t/p/w342/${id}.jpg`, q: 0.5, ...o })
 const idOf = (url) => url.match(/\/([^/]+)\.jpg$/)[1]
@@ -29,6 +29,14 @@ test('respects the limit', () => assert.equal(wallPosters(many(40), emptyish, 24
 test('empty catalog gives no posters and no rows', () => {
   assert.deepEqual(wallPosters([], emptyish), [])
   assert.deepEqual(wallRows([]), [])
+})
+
+test('the laptop wall gets five full rows of distinct posters when the catalog allows', () => {
+  const posters = wallPosters(many(60), emptyish, WALL_POSTERS)
+  assert.equal(posters.length, 40)
+  const rows = wallRows(posters, WALL_ROWS, WALL_PER_ROW)
+  assert.equal(rows.length, 5)
+  assert.equal(new Set(rows.flat()).size, 40)
 })
 
 test('a short list still fills every row', () => {

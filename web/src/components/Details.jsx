@@ -3,14 +3,26 @@ import { Badge } from './ui.jsx'
 
 const compact = new Intl.NumberFormat('en-IN', { notation: 'compact', maximumFractionDigits: 1 })
 
-export function DetailBadges({ item }) {
+// "Korean", "Japanese"… from the browser, falling back to the code.
+function languageName(code) {
+  try {
+    return new Intl.DisplayNames(['en'], { type: 'language' }).of(code) ?? code
+  } catch {
+    return code
+  }
+}
+
+// `languages` are the household's; anything else is flagged as subtitled.
+export function DetailBadges({ item, languages }) {
   const genres = (item.genres ?? []).slice(0, 2).join(' · ')
   if (item.kind === 'youtube') {
     return item.views ? <div className="flex flex-wrap gap-1.5"><Badge>{compact.format(item.views)} views</Badge></div> : null
   }
-  if (!item.rating && !item.cert && !genres) return null
+  const subtitled = languages && item.lang && !languages.includes(item.lang)
+  if (!item.rating && !item.cert && !genres && !subtitled) return null
   return (
     <div className="flex flex-wrap gap-1.5">
+      {subtitled && <Badge>{languageName(item.lang)} · subtitles</Badge>}
       {item.rating ? (
         <span className="rounded-md bg-gold/15 px-2 py-0.5 text-xs font-semibold text-gold" title={`${item.votes} votes on TMDB`}>
           ★ {item.rating.toFixed(1)} TMDB

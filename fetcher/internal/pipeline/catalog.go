@@ -10,6 +10,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"mealtime/fetcher/internal/model"
 	"mealtime/fetcher/internal/score"
 	"mealtime/fetcher/internal/similar"
 	"mealtime/fetcher/internal/state"
@@ -170,6 +171,12 @@ func BuildCatalog(st *state.State, stats Stats, region string, now time.Time, yt
 		if it.Providers == nil {
 			it.Providers = []string{}
 		}
+		if isAnime(t) {
+			if it.Moods == nil {
+				it.Moods = map[string]float64{}
+			}
+			it.Moods["anime"] = 1
+		}
 		if t.Kind == "youtube" {
 			// YouTube descriptions are mostly links and plugs; the title says enough.
 			it.Views = t.ViewCount
@@ -232,6 +239,22 @@ func familySafe(ts *state.TitleState, sig score.Signals) bool {
 		}
 	}
 	return true
+}
+
+// TMDB's genre id for animation, in both the movie and tv lists.
+const animationGenre = "16"
+
+// isAnime: Japanese animation. Its own mood chip, whatever the genre.
+func isAnime(t model.Title) bool {
+	if t.Lang != "ja" {
+		return false
+	}
+	for _, g := range t.Genres {
+		if g == "Animation" {
+			return true
+		}
+	}
+	return false
 }
 
 // trimOverview keeps whole sentences up to max bytes; a first sentence that
