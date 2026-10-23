@@ -20,6 +20,7 @@ type Title struct {
 	Popularity    float64  `json:"popularity,omitempty"`
 	Providers     []string `json:"providers,omitempty"` // normalized slugs available in region
 	Certification string   `json:"cert,omitempty"`
+	Cast          []string `json:"cast,omitempty"` // top billed, at most 3
 	Adult         bool     `json:"adult,omitempty"`
 	Poster        string   `json:"poster,omitempty"`
 	Link          string   `json:"link,omitempty"`

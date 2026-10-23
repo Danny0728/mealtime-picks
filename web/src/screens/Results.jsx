@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { MOODS, TIMES, WHO } from '../lib/picker.js'
 import { ALL_PLATFORMS, SEEN_RATINGS } from '../lib/store.js'
 import { Back, Badge, Bookmark, External, IconButton, Poster, Shuffle } from '../components/ui.jsx'
+import { About, DetailBadges } from '../components/Details.jsx'
 
 const label = (list, id) => list.find((x) => x.id === id)?.label
 export const platformName = (id) => ALL_PLATFORMS.find((p) => p.id === id)?.label ?? id
@@ -76,9 +77,11 @@ export default function Results({ store, go, results, onPicked, onSeen, onLater,
                   {title}
                   {main.year && p.kind !== 'combo' ? <span className="font-normal text-muted"> ({main.year})</span> : null}
                 </h2>
-                <p className="text-sm leading-snug text-soft">{p.reason}</p>
+                {p.kind !== 'combo' && <DetailBadges item={main} />}
               </div>
             </div>
+            {p.kind !== 'combo' && <About item={main} />}
+            <p className="text-sm leading-snug text-soft">{p.reason}</p>
             {rating === p.key ? (
               <div className="flex flex-col gap-2">
                 <p className="text-sm font-semibold">How was it?</p>

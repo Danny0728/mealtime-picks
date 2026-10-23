@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"mealtime/fetcher/internal/score"
 	"mealtime/fetcher/internal/similar"
@@ -16,19 +17,26 @@ import (
 
 // Item is one entry in catalog.json, shaped for the app's picker.
 type Item struct {
-	ID        string             `json:"id"`
-	Kind      string             `json:"kind"`
-	Name      string             `json:"name"`
-	Year      int                `json:"year,omitempty"`
-	Lang      string             `json:"lang,omitempty"`
-	Runtime   int                `json:"runtime,omitempty"`
-	EpMin     int                `json:"epMin,omitempty"`
-	Seasons   int                `json:"seasons,omitempty"`
-	Genres    []string           `json:"genres,omitempty"`
-	Providers []string           `json:"providers"`
-	Link      string             `json:"link,omitempty"`
-	Poster    string             `json:"poster,omitempty"`
-	Channel   string             `json:"channel,omitempty"`
+	ID        string   `json:"id"`
+	Kind      string   `json:"kind"`
+	Name      string   `json:"name"`
+	Year      int      `json:"year,omitempty"`
+	Lang      string   `json:"lang,omitempty"`
+	Runtime   int      `json:"runtime,omitempty"`
+	EpMin     int      `json:"epMin,omitempty"`
+	Seasons   int      `json:"seasons,omitempty"`
+	Genres    []string `json:"genres,omitempty"`
+	Providers []string `json:"providers"`
+	Link      string   `json:"link,omitempty"`
+	Poster    string   `json:"poster,omitempty"`
+	Channel   string   `json:"channel,omitempty"`
+	// What the card shows so nobody has to google it first.
+	Overview  string             `json:"overview,omitempty"`
+	Rating    float64            `json:"rating,omitempty"` // TMDB average, only with enough votes
+	Votes     int                `json:"votes,omitempty"`
+	Cert      string             `json:"cert,omitempty"`
+	Cast      []string           `json:"cast,omitempty"`
+	Views     int64              `json:"views,omitempty"` // YouTube
 	Safe      bool               `json:"safe"`
 	Quality   float64            `json:"q"`
 	Gem       float64            `json:"gem"`
@@ -51,6 +59,9 @@ type Catalog struct {
 }
 
 const maxItems = 3000
+
+// A TMDB average from fewer votes than this is too noisy to show.
+const minRatingVotes = 20
 
 var unsafeCerts = map[string]bool{"A": true, "S": true, "UA 16+": true, "18+": true, "R": true, "NC-17": true, "TV-MA": true}
 var riskyGenres = map[string]bool{"Horror": true, "Crime": true, "War": true, "Thriller": true}
@@ -160,6 +171,15 @@ func BuildCatalog(st *state.State, stats Stats, region string, now time.Time, yt
 			it.Providers = []string{}
 		}
 		if t.Kind == "youtube" {
+			// YouTube descriptions are mostly links and plugs; the title says enough.
+			it.Views = t.ViewCount
+		} else {
+			it.Overview, it.Cert, it.Cast = trimOverview(t.Overview, 300), t.Certification, t.Cast
+			if t.VoteCount >= minRatingVotes {
+				it.Rating, it.Votes = math.Round(t.VoteAverage*10)/10, t.VoteCount
+			}
+		}
+		if t.Kind == "youtube" {
 			if it.Moods == nil {
 				it.Moods = map[string]float64{}
 			}
@@ -212,6 +232,26 @@ func familySafe(ts *state.TitleState, sig score.Signals) bool {
 		}
 	}
 	return true
+}
+
+// trimOverview keeps whole sentences up to max bytes; a first sentence that
+// is already too long is cut at a word and ends with an ellipsis.
+func trimOverview(s string, max int) string {
+	s = strings.TrimSpace(s)
+	if len(s) <= max {
+		return s
+	}
+	head := s[:max]
+	for !utf8.ValidString(head) {
+		head = head[:len(head)-1]
+	}
+	if i := strings.LastIndexAny(head, ".!?"); i > max/3 {
+		return head[:i+1]
+	}
+	if i := strings.LastIndexByte(head[:len(head)-len("…")], ' '); i > 0 {
+		return head[:i] + "…"
+	}
+	return head
 }
 
 func WriteJSON(path string, v any) error {

@@ -17,7 +17,9 @@ const movieDetails = `{
   "watch/providers": {"results": {"IN": {"link": "https://www.themoviedb.org/movie/550/watch?locale=IN",
      "flatrate": [{"provider_id": 8, "provider_name": "Netflix"}, {"provider_id": 1796, "provider_name": "Netflix basic with Ads"}],
      "ads": [{"provider_id": 2336, "provider_name": "JioHotstar"}]}}},
-  "release_dates": {"results": [{"iso_3166_1": "IN", "release_dates": [{"certification": "A"}]}]}
+  "release_dates": {"results": [{"iso_3166_1": "IN", "release_dates": [{"certification": "A"}]}]},
+  "credits": {"cast": [{"name": "Edward Norton", "order": 0}, {"name": "Brad Pitt", "order": 1},
+     {"name": "Helena Bonham Carter", "order": 2}, {"name": "Meat Loaf", "order": 3}]}
 }`
 
 const tvDetails = `{
@@ -53,6 +55,9 @@ func TestEnrich(t *testing.T) {
 	}
 	if m.Runtime != 139 || m.Certification != "A" || strings.Join(m.Providers, ",") != "netflix,jiohotstar" || len(m.Keywords) != 1 {
 		t.Fatalf("movie: %+v", m)
+	}
+	if got := strings.Join(m.Cast, ", "); got != "Edward Norton, Brad Pitt, Helena Bonham Carter" {
+		t.Errorf("cast should be the top three billed, got %q", got)
 	}
 
 	tv := model.Title{ID: "tmdb:tv:1", Kind: "tv"}
