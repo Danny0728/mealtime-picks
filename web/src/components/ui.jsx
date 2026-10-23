@@ -19,7 +19,7 @@ export function Section({ title, hint, children }) {
   return (
     <section className="flex flex-col gap-2.5">
       <div className="flex flex-col gap-0.5">
-        <h2 className="text-[15px] font-semibold">{title}</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">{title}</h2>
         {hint && <p className="text-[13px] text-muted">{hint}</p>}
       </div>
       {children}
@@ -33,7 +33,7 @@ export function IconButton({ label, onClick, children }) {
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="relative flex size-11 shrink-0 items-center justify-center rounded-xl border border-line bg-card text-ink"
+      className="relative flex size-11 shrink-0 items-center justify-center rounded-xl border border-line bg-card/60 text-ink backdrop-blur-md"
     >
       {children}
     </button>
@@ -44,7 +44,7 @@ export function Badge({ children }) {
   return <span className="rounded-md bg-chip px-2 py-0.5 text-xs font-semibold text-ink">{children}</span>
 }
 
-const tints = [
+export const tints = [
   ['#D7E8E4', '#0B4F49'],
   ['#F5DDCF', '#8A2E07'],
   ['#E1E3F2', '#2E3478'],

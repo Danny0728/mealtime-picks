@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { MOODS, TIMES, WHO } from '../lib/picker.js'
+import { wallPosters } from '../lib/wall.js'
+import PosterWall from '../components/PosterWall.jsx'
 import { Bookmark, Chip, IconButton, Inbox, Pause, Play, Section, Sliders, ThumbUp } from '../components/ui.jsx'
 
 const DAY = 864e5
@@ -21,17 +23,19 @@ export default function PickScreen({ store, go, catalog, byId, onPick, onFeedbac
   }
 
   const ready = catalog.status === 'ready'
+  const posters = useMemo(
+    () => wallPosters(ready ? catalog.data.items : [], store),
+    [ready, catalog, store],
+  )
   const platformsLabel = store.settings.platforms.length
     ? `From ${store.settings.platforms.length} platform${store.settings.platforms.length > 1 ? 's' : ''} you have`
     : 'Pick your platforms in setup first'
 
   return (
-    <main className="flex min-h-full flex-1 flex-col gap-[22px] px-5 pt-7 pb-7">
-      <header className="flex items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <p className="text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">Mealtime picks</p>
-          <h1 className="font-display text-[32px] leading-[1.08] font-bold">What are we watching?</h1>
-        </div>
+    <main className="relative isolate flex min-h-full flex-1 flex-col gap-[22px] overflow-hidden px-5 pt-6 pb-7">
+      <div className="absolute inset-0 -z-10"><PosterWall posters={posters} /></div>
+      <header className="flex items-center justify-between gap-3">
+        <p className="font-display text-xl tracking-[0.14em] text-gold">MEALTIME PICKS</p>
         <div className="flex gap-2">
           <IconButton label={`Watchlist (${store.watchlist.length})`} onClick={() => go('watchlist')}>
             <Bookmark size={20} />
@@ -45,6 +49,13 @@ export default function PickScreen({ store, go, catalog, byId, onPick, onFeedbac
           <IconButton label="Setup" onClick={() => go('setup')}><Sliders /></IconButton>
         </div>
       </header>
+
+      <div className="mt-[150px] flex flex-col gap-1.5">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold">Tonight's showing</p>
+        <h1 className="font-display text-[52px] leading-[0.92] [text-shadow:0_4px_24px_var(--color-ground)]">
+          What are we<br />watching?
+        </h1>
+      </div>
 
       {pendingItem && !thanks && (
         <div className="flex flex-col gap-3 rounded-2xl border border-hair bg-card p-4">

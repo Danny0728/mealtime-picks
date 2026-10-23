@@ -109,3 +109,18 @@ button, a, input { font-family: inherit; }
 }
 
 input[type="checkbox"] { accent-color: var(--color-gold); }
+
+/* Poster wall: slow drift, alternate rows the other way, still for reduced motion. */
+@keyframes drift { to { transform: translateX(-50%); } }
+.wall-row { animation: drift 60s linear infinite; }
+.wall-row:nth-child(2) { animation-duration: 75s; animation-direction: reverse; }
+.wall-row:nth-child(3) { animation-duration: 90s; }
+@media (prefers-reduced-motion: reduce) { .wall-row { animation: none; } }
+.wall-poster { filter: saturate(1.1) brightness(.85); }
+.wall-fade {
+  background:
+    radial-gradient(120% 70% at 50% 10%, transparent 30%, color-mix(in srgb, var(--color-ground) 55%, transparent) 60%, var(--color-ground) 92%),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-ground) 15%, transparent) 0%, color-mix(in srgb, var(--color-ground) 38%, transparent) 45%, var(--color-ground) 100%);
+}
+:root[data-theme="light"] .wall-poster { filter: none; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .wall-poster { filter: none; } }
