@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { ALL_LANGUAGES, ALL_PLATFORMS, exportBackup, importBackup } from '../lib/store.js'
 import { Chip, Section } from '../components/ui.jsx'
+import Backdrop from '../components/Backdrop.jsx'
 
 const THEMES = [
   { id: 'system', label: 'System' },
@@ -42,7 +43,9 @@ export default function Setup({ store, update, go, catalog }) {
   }
 
   return (
-    <main className="flex min-h-full flex-1 flex-col gap-5 px-5 pt-6 pb-6">
+    <>
+    <Backdrop catalog={catalog} store={store} />
+    <main className="flex min-h-full flex-1 flex-col gap-5 px-5 pt-6 pb-6 lg:mx-auto lg:my-10 lg:w-full lg:max-w-[640px] lg:flex-none lg:rounded-3xl lg:border lg:border-hair lg:bg-card/75 lg:p-10 lg:backdrop-blur-xl">
       <header className="flex items-center justify-between gap-3">
         <div>
           <p className="text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">One-time setup</p>
@@ -74,6 +77,19 @@ export default function Setup({ store, update, go, catalog }) {
           ))}
         </div>
       </Section>
+
+      <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-hair bg-card px-4 py-3.5">
+        <span className="flex flex-col gap-0.5">
+          <span className="text-base font-semibold">Include other languages (with subtitles)</span>
+          <span className="text-[13px] text-muted">K-dramas, anime, world cinema. Yours still come first.</span>
+        </span>
+        <input
+          type="checkbox"
+          className="size-[22px] shrink-0"
+          checked={s.otherLanguages}
+          onChange={() => update((st) => ((st.settings.otherLanguages = !st.settings.otherLanguages), st))}
+        />
+      </label>
 
       <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-hair bg-card px-4 py-3.5">
         <span className="flex flex-col gap-0.5">
@@ -124,5 +140,6 @@ export default function Setup({ store, update, go, catalog }) {
         {catalog.status === 'ready' ? catalog.data.attribution : 'Title data from TMDB. Where-to-watch data from JustWatch via TMDB.'}
       </p>
     </main>
+    </>
   )
 }

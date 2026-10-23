@@ -121,12 +121,11 @@ func (p *Pipeline) refreshPool(ctx context.Context, langs []string) error {
 	if err := p.tmdb.LoadGenres(ctx); err != nil {
 		return err
 	}
-	pages := p.Cfg.Budgets.TMDBPoolPagesPerLanguage
-	for _, lang := range langs {
+	for _, pl := range pools(p.Cfg.Budgets, langs) {
 		for _, kind := range []string{"movie", "tv"} {
-			ts, err := p.tmdb.Discover(ctx, kind, lang, pages)
+			ts, err := p.tmdb.Discover(ctx, kind, pl.Pool, pl.Pages)
 			if err != nil {
-				p.Log.Printf("discover %s/%s: %v", kind, lang, err)
+				p.Log.Printf("discover %s/%+v: %v", kind, pl.Pool, err)
 			}
 			for _, t := range ts {
 				p.State.Upsert(t)
@@ -135,6 +134,33 @@ func (p *Pipeline) refreshPool(ctx context.Context, langs []string) error {
 		}
 	}
 	return nil
+}
+
+type poolBudget struct {
+	Pool  tmdb.Pool
+	Pages int
+}
+
+// pools lists what to discover: each home language, then the world's
+// most-voted titles, K-dramas and anime. A pool with no budget is skipped,
+// and one that a home language already covers isn't fetched twice.
+func pools(b config.Budgets, langs []string) []poolBudget {
+	var out []poolBudget
+	home := map[string]bool{}
+	for _, l := range langs {
+		home[l] = true
+		out = append(out, poolBudget{tmdb.Pool{Lang: l}, b.TMDBPoolPagesPerLanguage})
+	}
+	for _, x := range []poolBudget{
+		{tmdb.Pool{}, b.WorldPoolPages},
+		{tmdb.Pool{Lang: "ko"}, b.KoreanPoolPages},
+		{tmdb.Pool{Lang: "ja", Genres: animationGenre}, b.AnimePoolPages},
+	} {
+		if x.Pages > 0 && !(x.Pool.Genres == "" && home[x.Pool.Lang]) {
+			out = append(out, x)
+		}
+	}
+	return out
 }
 
 func (p *Pipeline) buildGazetteer() {

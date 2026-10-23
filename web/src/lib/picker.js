@@ -16,6 +16,7 @@ export const MOODS = [
   { id: 'thriller', label: 'Thriller' },
   { id: 'standup', label: 'Stand-up' },
   { id: 'sports', label: 'Sports' },
+  { id: 'anime', label: 'Anime' },
 ]
 
 export const WHO = [
@@ -95,11 +96,19 @@ function genreOverlap(a, b) {
   return b.genres.filter((g) => s.has(g)).length / Math.max(a.genres.length, b.genres.length)
 }
 
+// Not in the household's languages: watchable with subtitles, ranked lower.
+export function isSubtitled(item, settings) {
+  return Boolean(item.lang) && !settings.languages.includes(item.lang)
+}
+
+// A subtitled title has to be clearly better to beat one in your language:
+// about what a big jump in community love and hidden-gem score is worth.
+const SUBTITLE_PENALTY = 0.08
+
 function allowed(item, settings, who) {
   const platforms = new Set(settings.platforms)
   if (!item.providers.some((p) => platforms.has(p))) return false
-  if (item.kind !== 'youtube' && item.lang && !settings.languages.includes(item.lang)) return false
-  if (item.kind === 'youtube' && item.lang && !settings.languages.includes(item.lang)) return false
+  if (settings.otherLanguages === false && isSubtitled(item, settings)) return false
   if ((settings.familySafe || who === 'kids' || who === 'family') && !item.safe) return false
   return true
 }
@@ -138,7 +147,10 @@ export function pick(catalog, store, ask, rng = Math.random, keep = null) {
     const f = fit(item, slot)
     if (item.kind === 'youtube' && f.short && rel >= 0.15) shortVideos.push({ item, rel })
     if (f.score <= 0 || f.short) continue
-    candidates.push({ ...scoreOne(item, rel, f, w, taste, recentShown), mood: moods.length > 1 ? mood : null })
+    const c = scoreOne(item, rel, f, w, taste, recentShown)
+    // Asking for anime is asking for Japanese with subtitles: no penalty then.
+    if (isSubtitled(item, store.settings) && mood !== 'anime') c.score -= SUBTITLE_PENALTY
+    candidates.push({ ...c, mood: moods.length > 1 ? mood : null })
   }
 
   // Two short videos that together fill the slot (the YouTube "double bill").

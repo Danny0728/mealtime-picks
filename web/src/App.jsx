@@ -192,5 +192,6 @@ export default function App() {
       screen = <PickScreen {...common} onPick={runPick} onFeedback={giveFeedback} />
   }
 
-  return <div className="grain relative mx-auto flex min-h-full max-w-[480px] flex-col">{screen}</div>
+  // Phone-width column; laptops get the room (each screen decides how to use it).
+  return <div className="grain relative mx-auto flex min-h-full max-w-[480px] flex-col lg:max-w-[1200px]">{screen}</div>
 }

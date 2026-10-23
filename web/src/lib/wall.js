@@ -3,7 +3,12 @@
 
 const SMALL = '/w185/'
 
-export function wallPosters(items, store, limit = 24) {
+// Five rows of eight fill a laptop window; phones show the first three rows.
+export const WALL_ROWS = 5
+export const WALL_PER_ROW = 8
+export const WALL_POSTERS = WALL_ROWS * WALL_PER_ROW
+
+export function wallPosters(items, store, limit = WALL_POSTERS) {
   const byId = new Map(items.map((i) => [i.id, i]))
   const loved = [
     ...(store.history ?? []).filter((h) => h.feedback === 'liked').map((h) => h.id),

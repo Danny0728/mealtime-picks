@@ -31,7 +31,7 @@ export default function Results({ store, go, results, onPicked, onSeen, onLater,
   const mine = new Set(store.settings.platforms)
 
   return (
-    <main className="flex min-h-full flex-1 flex-col gap-4 px-5 pt-6 pb-7">
+    <main className="flex min-h-full flex-1 flex-col gap-4 px-5 pt-6 pb-7 lg:px-10 lg:pt-10">
       <header className="flex items-center gap-3">
         <IconButton label="Back" onClick={() => go('pick')}><Back /></IconButton>
         <div>
@@ -54,6 +54,8 @@ export default function Results({ store, go, results, onPicked, onSeen, onLater,
         </p>
       )}
 
+      {/* Phones: one column. Laptops: three side by side to compare. */}
+      <div className="contents lg:grid lg:grid-cols-3 lg:items-start lg:gap-5">
       {picks.map((p) => {
         const main = p.items[0]
         const platform = main.providers.find((x) => mine.has(x)) ?? main.providers[0]
@@ -73,8 +75,8 @@ export default function Results({ store, go, results, onPicked, onSeen, onLater,
                 <div aria-hidden="true" className="card-veil absolute inset-0 -z-10" />
               </>
             )}
-            <div className="flex gap-3">
-              <Poster item={main} count={p.items.length} size="lg" />
+            <div className="flex gap-3 lg:flex-col">
+              <Poster item={main} count={p.items.length} size="card" />
               <div className="flex min-w-0 flex-col gap-1.5">
                 <div className="flex flex-wrap gap-1.5">
                   <Badge>{platformName(platform)}</Badge>
@@ -85,7 +87,7 @@ export default function Results({ store, go, results, onPicked, onSeen, onLater,
                   {title}
                   {main.year && p.kind !== 'combo' ? <span className="font-normal text-soft"> ({main.year})</span> : null}
                 </h2>
-                {p.kind !== 'combo' && <DetailBadges item={main} />}
+                {p.kind !== 'combo' && <DetailBadges item={main} languages={store.settings.languages} />}
               </div>
             </div>
             {p.kind !== 'combo' && <About item={main} />}
@@ -139,13 +141,14 @@ export default function Results({ store, go, results, onPicked, onSeen, onLater,
           </article>
         )
       })}
+      </div>
 
       <div className="flex-1" />
 
       <button
         type="button"
         onClick={onShuffle}
-        className="flex min-h-[52px] items-center justify-center gap-2 rounded-2xl border border-gold bg-card text-base font-semibold text-gold"
+        className="flex min-h-[52px] items-center justify-center gap-2 rounded-2xl border border-gold bg-card text-base font-semibold text-gold lg:mx-auto lg:w-[360px]"
       >
         <Shuffle /> Shuffle for 3 new ones
       </button>

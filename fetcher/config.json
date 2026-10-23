@@ -3,6 +3,9 @@
   "languages": ["mr", "hi", "en"],
   "budgets": {
     "tmdbPoolPagesPerLanguage": 10,
+    "worldPoolPages": 10,
+    "koreanPoolPages": 5,
+    "animePoolPages": 8,
     "tmdbSearchResolves": 150,
     "tmdbDetails": 1500,
     "redditQueries": 40,
@@ -19,7 +22,12 @@
     "best documentaries netflix india",
     "hidden gem web series india",
     "underrated marathi movies",
-    "best stand up comedy specials"
+    "best stand up comedy specials",
+    "underrated k-drama recommendations",
+    "best korean movies like parasite",
+    "anime recommendations for beginners",
+    "underrated anime series",
+    "best foreign language films"
   ],
   "youtube": {
     "watchableQueries": [

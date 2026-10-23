@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { buildIndex, matchTitles } from '../lib/share.js'
 import { Back, IconButton } from '../components/ui.jsx'
+import Backdrop from '../components/Backdrop.jsx'
 
 // Posts shared in from Instagram (or pasted on iPhone): confirm what they
 // recommend. Confirmed titles count as the family's own recommendation.
@@ -23,7 +24,9 @@ export default function InboxScreen({ store, update, go, catalog, byId, incoming
   }
 
   return (
-    <main className="flex flex-1 flex-col gap-4 px-5 pt-6 pb-7">
+    <>
+    <Backdrop catalog={catalog} store={store} />
+    <main className="flex flex-1 flex-col gap-4 px-5 pt-6 pb-7 lg:mx-auto lg:my-10 lg:w-full lg:max-w-[640px] lg:flex-none lg:rounded-3xl lg:border lg:border-hair lg:bg-card/75 lg:p-10 lg:backdrop-blur-xl">
       <header className="flex items-center gap-3">
         <IconButton label="Back" onClick={() => go('pick')}><Back /></IconButton>
         <div>
@@ -87,5 +90,6 @@ export default function InboxScreen({ store, update, go, catalog, byId, incoming
         </section>
       )}
     </main>
+    </>
   )
 }
