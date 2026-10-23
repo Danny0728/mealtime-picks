@@ -31,7 +31,7 @@ export default function SeenGrid({ store, update, go, catalog }) {
       <header className="flex items-center gap-3">
         <IconButton label="Back" onClick={() => go('setup')}><Back /></IconButton>
         <div>
-          <h1 className="font-display text-[26px] leading-[1.1] font-bold">Seen any of these?</h1>
+          <h1 className="font-display text-[34px] leading-none tracking-[0.02em]">Seen any of these?</h1>
           <p className="text-sm text-muted">{seen.size} marked · say how they were to sharpen your picks</p>
         </div>
       </header>

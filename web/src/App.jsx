@@ -192,5 +192,5 @@ export default function App() {
       screen = <PickScreen {...common} onPick={runPick} onFeedback={giveFeedback} />
   }
 
-  return <div className="mx-auto flex min-h-full max-w-[480px] flex-col">{screen}</div>
+  return <div className="grain relative mx-auto flex min-h-full max-w-[480px] flex-col">{screen}</div>
 }

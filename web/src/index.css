@@ -125,6 +125,22 @@ input[type="checkbox"] { accent-color: var(--color-gold); }
 :root[data-theme="light"] .wall-poster { filter: none; }
 @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .wall-poster { filter: none; } }
 
+/* Film grain over everything: overlay on dark, a lighter multiply on paper. */
+.grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  opacity: .09;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+:root[data-theme="light"] .grain::after { opacity: .06; mix-blend-mode: multiply; }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .grain::after { opacity: .06; mix-blend-mode: multiply; }
+}
+
 /* Pick cards lit by their poster. Dark: a deep, dim glow under a near-solid
    veil where the text sits. Light: a pale tint under a mostly white veil. */
 .card-glow { filter: blur(22px) saturate(1.3) brightness(.45); transform: scale(1.15); }

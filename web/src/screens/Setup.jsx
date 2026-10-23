@@ -2,6 +2,12 @@ import { useRef, useState } from 'react'
 import { ALL_LANGUAGES, ALL_PLATFORMS, exportBackup, importBackup } from '../lib/store.js'
 import { Chip, Section } from '../components/ui.jsx'
 
+const THEMES = [
+  { id: 'system', label: 'System' },
+  { id: 'light', label: 'Light' },
+  { id: 'dark', label: 'Dark' },
+]
+
 export default function Setup({ store, update, go, catalog }) {
   const fileRef = useRef(null)
   const [msg, setMsg] = useState('')
@@ -40,7 +46,7 @@ export default function Setup({ store, update, go, catalog }) {
       <header className="flex items-center justify-between gap-3">
         <div>
           <p className="text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">One-time setup</p>
-          <h1 className="font-display text-[28px] leading-[1.1] font-bold">Your household</h1>
+          <h1 className="font-display text-[36px] leading-none tracking-[0.02em]">Your household</h1>
         </div>
         <button type="button" onClick={done} className="min-h-11 rounded-xl bg-primary px-[18px] text-[15px] font-semibold text-primary-ink">
           Done
@@ -81,6 +87,14 @@ export default function Setup({ store, update, go, catalog }) {
           onChange={() => update((st) => ((st.settings.familySafe = !st.settings.familySafe), st))}
         />
       </label>
+
+      <Section title="Theme" hint="System follows your phone's light or dark setting.">
+        <div className="flex flex-wrap gap-2">
+          {THEMES.map((t) => (
+            <Chip key={t.id} on={s.theme === t.id} onClick={() => update((st) => ((st.settings.theme = t.id), st))}>{t.label}</Chip>
+          ))}
+        </div>
+      </Section>
 
       <Section title="Already watched" hint="Tap the popular ones you've seen so they never come up.">
         <button
