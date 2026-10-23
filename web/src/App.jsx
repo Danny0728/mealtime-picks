@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { load, save } from './lib/store.js'
 import { pick, updateWeights } from './lib/picker.js'
 import { readShareParams } from './lib/share.js'
+import { applyTheme } from './lib/theme.js'
 import Setup from './screens/Setup.jsx'
 import PickScreen from './screens/Pick.jsx'
 import Results from './screens/Results.jsx'
@@ -44,6 +45,8 @@ export default function App() {
   useEffect(() => {
     save(store)
   }, [store])
+
+  useEffect(() => applyTheme(store.settings.theme), [store.settings.theme])
 
   // A post shared into the app from Instagram (Android share sheet).
   useEffect(() => {

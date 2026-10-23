@@ -1,24 +1,95 @@
 @import "tailwindcss";
 
+/* Two cinema palettes. Light values live in @theme; dark redefines the same
+   tokens, both when the phone is dark (and Setup hasn't forced light) and when
+   Setup forces dark. Utilities read var(--color-*), so every screen follows. */
 @theme {
-  --font-sans: "DM Sans", system-ui, sans-serif;
-  --font-display: "Bricolage Grotesque", "DM Sans", sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Bebas Neue", "Inter", sans-serif;
 
-  --color-ground: #F5F6F8;
+  --color-ground: #F4EFE6;
   --color-card: #FFFFFF;
-  --color-ink: #15171C;
-  --color-muted: #5B6270;
-  --color-soft: #4A505C;
-  --color-line: #D5D9E0;
-  --color-hair: #E3E6EB;
-  --color-chip: #EEF0F3;
-  --color-accent: #C2410C;
-  --color-accent-ink: #8A2E07;
+  --color-card-2: #FBF7F0;
+  --color-line: #E2D9CA;
+  --color-hair: #E2D9CA;
+  --color-chip: #EDE6DA;
+  --color-ink: #1B1712;
+  --color-soft: #4E463C;
+  --color-muted: #6E655A;
+  --color-gold: #A8650A;
+  --color-sel: #1B1712;
+  --color-sel-ink: #F4EFE6;
+  --color-primary: #1B1712;
+  --color-primary-ink: #F4EFE6;
+  --color-cta-from: #2A241C;
+  --color-cta-to: #14110D;
+  --color-cta-ink: #F7C25C;
+  --color-accent: #A8650A;
+  --color-accent-ink: #7A4A06;
   --color-good: #0B4F49;
-  --color-good-bg: #E6F2F0;
-  --color-star: #6B4A06;
-  --color-star-bg: #FBF0D9;
+  --color-good-bg: #E3EFE9;
+  --color-star: #A8650A;
+  --color-star-bg: #F6E7CC;
 }
+
+@layer theme {
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --color-ground: #0A0A0E;
+      --color-card: #15151C;
+      --color-card-2: #1D1D26;
+      --color-line: #2A2A36;
+      --color-hair: #22222C;
+      --color-chip: #1D1D26;
+      --color-ink: #F3F1EC;
+      --color-soft: #B7B3AA;
+      --color-muted: #85818A;
+      --color-gold: #F2B544;
+      --color-sel: #F2B544;
+      --color-sel-ink: #1A1205;
+      --color-primary: #F3F1EC;
+      --color-primary-ink: #0A0A0E;
+      --color-cta-from: #F7C25C;
+      --color-cta-to: #E9A12E;
+      --color-cta-ink: #1A1205;
+      --color-accent: #F2B544;
+      --color-accent-ink: #F7C25C;
+      --color-good: #7FD1C2;
+      --color-good-bg: #13302C;
+      --color-star: #F2B544;
+      --color-star-bg: #2E2410;
+    }
+  }
+  :root[data-theme="dark"] {
+    --color-ground: #0A0A0E;
+    --color-card: #15151C;
+    --color-card-2: #1D1D26;
+    --color-line: #2A2A36;
+    --color-hair: #22222C;
+    --color-chip: #1D1D26;
+    --color-ink: #F3F1EC;
+    --color-soft: #B7B3AA;
+    --color-muted: #85818A;
+    --color-gold: #F2B544;
+    --color-sel: #F2B544;
+    --color-sel-ink: #1A1205;
+    --color-primary: #F3F1EC;
+    --color-primary-ink: #0A0A0E;
+    --color-cta-from: #F7C25C;
+    --color-cta-to: #E9A12E;
+    --color-cta-ink: #1A1205;
+    --color-accent: #F2B544;
+    --color-accent-ink: #F7C25C;
+    --color-good: #7FD1C2;
+    --color-good-bg: #13302C;
+    --color-star: #F2B544;
+    --color-star-bg: #2E2410;
+  }
+}
+
+:root { color-scheme: light dark; }
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
 
 html, body, #root { height: 100%; }
 
@@ -33,8 +104,8 @@ body {
 button, a, input { font-family: inherit; }
 
 :focus-visible {
-  outline: 3px solid var(--color-accent);
+  outline: 3px solid var(--color-gold);
   outline-offset: 2px;
 }
 
-input[type="checkbox"] { accent-color: var(--color-accent); }
+input[type="checkbox"] { accent-color: var(--color-gold); }
