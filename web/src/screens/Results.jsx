@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { MOODS, TIMES, WHO } from '../lib/picker.js'
 import { ALL_PLATFORMS, SEEN_RATINGS } from '../lib/store.js'
-import { Back, Badge, External, IconButton, Poster, Shuffle } from '../components/ui.jsx'
+import { Back, Badge, Bookmark, External, IconButton, Poster, Shuffle } from '../components/ui.jsx'
 
 const label = (list, id) => list.find((x) => x.id === id)?.label
-const platformName = (id) => ALL_PLATFORMS.find((p) => p.id === id)?.label ?? id
+export const platformName = (id) => ALL_PLATFORMS.find((p) => p.id === id)?.label ?? id
 
 // Where the "Open" button goes. Platform search pages are the most reliable
 // deep link we have; TMDB's watch page (JustWatch data) is the fallback.
-function openUrl(item, platform) {
+export function openUrl(item, platform) {
   const q = encodeURIComponent(item.name)
   switch (platform) {
     case 'youtube':
@@ -22,7 +22,7 @@ function openUrl(item, platform) {
   }
 }
 
-export default function Results({ store, go, results, onPicked, onSeen, onShuffle }) {
+export default function Results({ store, go, results, onPicked, onSeen, onLater, onShuffle }) {
   const { ask, picks } = results
   const [rating, setRating] = useState(null) // key of the pick asking "How was it?"
   const summary = [label(TIMES, ask.time), label(MOODS, ask.mood), label(WHO, ask.who)].filter(Boolean).join(' · ')
@@ -99,24 +99,31 @@ export default function Results({ store, go, results, onPicked, onSeen, onShuffl
                 </button>
               </div>
             ) : (
-            <div className="grid grid-cols-2 gap-2">
-              <a
-                href={openUrl(main, platform)}
-                target="_blank"
-                rel="noreferrer"
-                onClick={() => onPicked(p)}
-                className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-ink text-sm font-semibold text-white"
-              >
-                {p.kind === 'combo' ? 'Play first' : `Open ${platformName(platform)}`} <External />
-              </a>
-              <button
-                type="button"
-                onClick={() => setRating(p.key)}
-                className="min-h-11 rounded-xl border border-line bg-card text-sm font-semibold"
-              >
-                Seen it
-              </button>
-            </div>
+              <div className="grid grid-cols-[1fr_auto_auto] gap-2">
+                <a
+                  href={openUrl(main, platform)}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => onPicked(p)}
+                  className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-ink px-2 text-sm font-semibold text-white"
+                >
+                  {p.kind === 'combo' ? 'Play first' : `Open ${platformName(platform)}`} <External />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setRating(p.key)}
+                  className="min-h-11 rounded-xl border border-line bg-card px-3 text-sm font-semibold"
+                >
+                  Seen it
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onLater(p)}
+                  className="flex min-h-11 items-center gap-1 rounded-xl border border-line bg-card px-3 text-sm font-semibold"
+                >
+                  <Bookmark /> Later
+                </button>
+              </div>
             )}
           </article>
         )

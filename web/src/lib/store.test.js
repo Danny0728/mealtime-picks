@@ -6,6 +6,7 @@ test('older backups without seen ratings still load', () => {
   const s = normalize({ version: 1, seen: ['a'], history: [] })
   assert.deepEqual(s.seen, ['a'])
   assert.deepEqual(s.seenRatings, {})
+  assert.deepEqual(s.watchlist, [])
 })
 
 test('seen ratings survive a round trip', () => {

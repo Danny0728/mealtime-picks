@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { MOODS, TIMES, WHO } from '../lib/picker.js'
-import { Chip, IconButton, Inbox, Pause, Play, Section, Sliders, ThumbUp } from '../components/ui.jsx'
+import { Bookmark, Chip, IconButton, Inbox, Pause, Play, Section, Sliders, ThumbUp } from '../components/ui.jsx'
 
 const DAY = 864e5
 
@@ -33,6 +33,14 @@ export default function PickScreen({ store, go, catalog, byId, onPick, onFeedbac
           <h1 className="font-display text-[32px] leading-[1.08] font-bold">What are we watching?</h1>
         </div>
         <div className="flex gap-2">
+          <IconButton label={`Watchlist (${store.watchlist.length})`} onClick={() => go('watchlist')}>
+            <Bookmark size={20} />
+            {store.watchlist.length > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-5 rounded-full bg-accent px-1 text-center text-[11px] leading-5 font-bold text-white">
+                {store.watchlist.length}
+              </span>
+            )}
+          </IconButton>
           <IconButton label="Saved from Instagram" onClick={() => go('inbox')}><Inbox /></IconButton>
           <IconButton label="Setup" onClick={() => go('setup')}><Sliders /></IconButton>
         </div>

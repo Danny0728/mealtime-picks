@@ -88,6 +88,23 @@ test('a seen title rated "ok" only hides it', () => {
   assert.deepEqual(ok.map((p) => [p.key, p.score]), plain.map((p) => [p.key, p.score]))
 })
 
+test('watchlisted titles are not picked but nudge similar ones up', () => {
+  const cat = { items: [
+    item('saved', { sim: ['twin'] }),
+    item('twin', { q: 0.4, sim: ['saved'] }),
+    item('other', { q: 0.5 }),
+  ] }
+  const ask = { time: '45', mood: null, who: 'adults' }
+  const { picks } = pick(cat, store({ watchlist: [{ id: 'saved', at: 1 }] }), ask, seq(0.9))
+  assert.ok(!picks.some((p) => p.items[0].id === 'saved'))
+  const twin = picks.find((p) => p.items[0].id === 'twin')
+  assert.equal(picks[0], twin)
+  assert.match(twin.reason, /Close to saved, which you saved/)
+  // Weaker than actually loving it.
+  const loved = pick(cat, store({ seen: ['saved'], seenRatings: { saved: 'liked' } }), ask, seq(0.9)).picks
+  assert.ok(twin.factors.p < loved.find((p) => p.items[0].id === 'twin').factors.p)
+})
+
 test('kept picks stay put and the free slot gets a new title', () => {
   const cat = { items: ['a', 'b', 'c', 'd', 'e'].map((id, i) => item(id, { q: 0.9 - i * 0.1, genres: [id] })) }
   const ask = { time: '45', mood: null, who: 'adults' }

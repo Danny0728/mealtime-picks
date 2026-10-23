@@ -65,7 +65,13 @@ function historySets(store) {
     if (r === 'liked') liked.push(id)
     if (r === 'disliked') disliked.push(id)
   }
-  return { taken, liked, disliked, recentShown }
+  // Watchlisted: not tonight, but it sounded good, so a gentler pull than a like.
+  const saved = []
+  for (const w of store.watchlist ?? []) {
+    taken.add(w.id)
+    saved.push(w.id)
+  }
+  return { taken, liked, disliked, saved, recentShown }
 }
 
 // Similarity from the weekly neighbour lists: rank 0 ≈ 1, rank 11 ≈ 0.1.
@@ -103,10 +109,10 @@ function allowed(item, settings, who) {
 export function pick(catalog, store, ask, rng = Math.random, keep = null) {
   const slot = timeById(ask.time)
   const w = { ...DEFAULT_WEIGHTS, ...(store.weights ?? {}) }
-  const { taken, liked, disliked, recentShown } = historySets(store)
+  const { taken, liked, disliked, saved, recentShown } = historySets(store)
   const byId = new Map(catalog.items.map((it) => [it.id, it]))
-  const likedItems = liked.map((id) => byId.get(id)).filter(Boolean)
-  const dislikedItems = disliked.map((id) => byId.get(id)).filter(Boolean)
+  const items = (ids) => ids.map((id) => byId.get(id)).filter(Boolean)
+  const taste = { liked: items(liked), disliked: items(disliked), saved: items(saved) }
 
   const candidates = []
   const shortVideos = []
@@ -116,12 +122,12 @@ export function pick(catalog, store, ask, rng = Math.random, keep = null) {
     const f = fit(item, slot)
     if (item.kind === 'youtube' && f.short && rel >= 0.15) shortVideos.push({ item, rel })
     if (f.score <= 0 || f.short) continue
-    candidates.push(scoreOne(item, rel, f, w, likedItems, dislikedItems, recentShown))
+    candidates.push(scoreOne(item, rel, f, w, taste, recentShown))
   }
 
   // Two short videos that together fill the slot (the YouTube "double bill").
   for (const combo of combos(shortVideos, slot)) {
-    candidates.push(scoreCombo(combo, w, likedItems, dislikedItems, recentShown, slot))
+    candidates.push(scoreCombo(combo, w, taste, recentShown, slot))
   }
 
   // Mood is a filter when there is enough to choose from, a preference otherwise.
@@ -144,30 +150,34 @@ export function pick(catalog, store, ask, rng = Math.random, keep = null) {
   return { picks: diversify(pool, picks, 3, rng), poolSize: pool.length, moodMatched }
 }
 
-function personalOf(item, likedItems, dislikedItems) {
+function personalOf(item, taste) {
   let best = null
   let plus = 0
-  for (const l of likedItems) {
-    const s = simScore(item, l)
-    if (s > plus) {
-      plus = s
-      best = l
+  let via = 'liked'
+  for (const [list, weight, how] of [[taste.liked, 1, 'liked'], [taste.saved, 0.5, 'saved']]) {
+    for (const l of list) {
+      const s = weight * simScore(item, l)
+      if (s > plus) {
+        plus = s
+        best = l
+        via = how
+      }
     }
   }
   let minus = 0
-  for (const d of dislikedItems) minus = Math.max(minus, simScore(item, d))
-  return { value: plus - 0.7 * minus, because: best }
+  for (const d of taste.disliked) minus = Math.max(minus, simScore(item, d))
+  return { value: plus - 0.7 * minus, because: best, via }
 }
 
-function scoreOne(item, rel, f, w, likedItems, dislikedItems, recentShown) {
-  const personal = personalOf(item, likedItems, dislikedItems)
+function scoreOne(item, rel, f, w, taste, recentShown) {
+  const personal = personalOf(item, taste)
   const factors = { q: item.q ?? 0, r: rel, p: personal.value, g: item.gem ?? 0, f: f.score }
   let score = FACTORS.reduce((s, k) => s + w[k] * factors[k], 0)
   score -= 0.08 * (recentShown.get(item.id) ?? 0) // don't keep showing the same skipped title
   return {
     key: item.id, kind: item.kind === 'tv' ? 'episodes' : 'single', items: [item],
     minutes: f.minutes, episodes: f.episodes, factors, score,
-    reason: reasonFor(item, factors, personal.because),
+    reason: reasonFor(item, factors, personal),
   }
 }
 
@@ -187,9 +197,9 @@ function combos(shorts, slot) {
   return out.slice(0, 4)
 }
 
-function scoreCombo(c, w, likedItems, dislikedItems, recentShown, slot) {
-  const pa = personalOf(c.a.item, likedItems, dislikedItems)
-  const pb = personalOf(c.b.item, likedItems, dislikedItems)
+function scoreCombo(c, w, taste, recentShown, slot) {
+  const pa = personalOf(c.a.item, taste)
+  const pb = personalOf(c.b.item, taste)
   const factors = {
     q: (c.a.item.q + c.b.item.q) / 2,
     r: (c.a.rel + c.b.rel) / 2,
@@ -267,8 +277,8 @@ function continuePick(store, byId, slot) {
   }
 }
 
-function reasonFor(item, f, because) {
-  if (because && f.p >= 0.3) return `Close to ${because.name}, which you liked.`
+function reasonFor(item, f, personal) {
+  if (personal.because && f.p >= 0.3) return `Close to ${personal.because.name}, which you ${personal.via}.`
   if (item.threads >= 3 && item.gem >= 0.6) return `A hidden gem: recommended in ${item.threads} threads, but not widely seen.`
   if (item.platforms >= 2) return `People keep recommending it on Reddit and YouTube.`
   if (item.threads >= 3) return `Recommended in ${item.threads} separate threads.`

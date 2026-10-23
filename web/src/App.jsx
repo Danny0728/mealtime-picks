@@ -7,6 +7,7 @@ import PickScreen from './screens/Pick.jsx'
 import Results from './screens/Results.jsx'
 import SeenGrid from './screens/SeenGrid.jsx'
 import InboxScreen from './screens/Inbox.jsx'
+import Watchlist from './screens/Watchlist.jsx'
 
 function useHashRoute() {
   const read = () => window.location.hash.replace(/^#\/?/, '') || 'pick'
@@ -92,27 +93,56 @@ export default function App() {
     })
   }
 
-  // A pick the family has already watched: remember how it went, then fill
-  // its slot with something new so there are still three to compare.
-  const markSeen = (p, rating) => {
+  // Take a pick off the screen and fill its slot with something new, so there
+  // are still three to compare. `change` applies the reason it went (seen,
+  // saved for later) to the store, and the replacement is chosen with it applied.
+  const replacePick = (p, change) => {
     if (!results) return
-    const ids = p.items.map((it) => it.id)
-    const seenRatings = { ...store.seenRatings }
-    if (rating) for (const id of ids) seenRatings[id] = rating
-    const shownThisRound = store.history.filter((h) => h.session === results.session).map((h) => h.id)
+    const next = change(structuredClone(store))
+    const shownThisRound = next.history.filter((h) => h.session === results.session).map((h) => h.id)
     const keep = results.picks.filter((x) => x.key !== p.key)
-    const view = { ...store, seenRatings, seen: [...store.seen, ...ids, ...shownThisRound] }
+    const view = { ...next, seen: [...next.seen, ...shownThisRound] }
     const picks = catalog.status === 'ready' ? pick(catalog.data, view, results.ask, Math.random, keep).picks : keep
-    const added = picks.slice(keep.length)
     const now = Date.now()
-    update((s) => {
-      for (const id of ids) if (!s.seen.includes(id)) s.seen.push(id)
-      s.seenRatings = seenRatings
-      for (const a of added) for (const it of a.items) s.history.push({ id: it.id, status: 'shown', feedback: null, at: now, session: results.session })
-      return s
-    })
+    for (const a of picks.slice(keep.length)) {
+      for (const it of a.items) next.history.push({ id: it.id, status: 'shown', feedback: null, at: now, session: results.session })
+    }
+    setStore(next)
     setResults((r) => r && { ...r, picks })
   }
+
+  // Already watched: remember how it went.
+  const markSeen = (p, rating) =>
+    replacePick(p, (s) => {
+      for (const it of p.items) {
+        if (!s.seen.includes(it.id)) s.seen.push(it.id)
+        if (rating) s.seenRatings[it.id] = rating
+      }
+      return s
+    })
+
+  // Sounds good, not tonight.
+  const saveForLater = (p) =>
+    replacePick(p, (s) => {
+      const now = Date.now()
+      for (const it of p.items) if (!s.watchlist.some((w) => w.id === it.id)) s.watchlist.push({ id: it.id, name: it.name, at: now })
+      return s
+    })
+
+  // Watching something from the watchlist counts as a pick, so the usual
+  // "how was it?" follows next time.
+  const watchFromList = (id) =>
+    update((s) => {
+      s.watchlist = s.watchlist.filter((w) => w.id !== id)
+      s.history.push({ id, status: 'picked', feedback: null, at: Date.now(), session: 'watchlist' })
+      return s
+    })
+
+  const removeFromList = (id) =>
+    update((s) => {
+      s.watchlist = s.watchlist.filter((w) => w.id !== id)
+      return s
+    })
 
   const giveFeedback = (entryAt, value) => {
     update((s) => {
@@ -135,6 +165,9 @@ export default function App() {
     case 'seen':
       screen = <SeenGrid {...common} />
       break
+    case 'watchlist':
+      screen = <Watchlist {...common} onWatch={watchFromList} onRemove={removeFromList} />
+      break
     case 'inbox':
       screen = <InboxScreen {...common} incoming={incoming} clearIncoming={() => setIncoming(null)} />
       break
@@ -145,6 +178,7 @@ export default function App() {
           results={results}
           onPicked={markPicked}
           onSeen={markSeen}
+          onLater={saveForLater}
           onShuffle={() => runPick(results.ask, results.picks.flatMap((p) => p.items.map((i) => i.id)))}
         />
       ) : (

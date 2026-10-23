@@ -33,7 +33,7 @@ export function IconButton({ label, onClick, children }) {
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-line bg-card text-ink"
+      className="relative flex size-11 shrink-0 items-center justify-center rounded-xl border border-line bg-card text-ink"
     >
       {children}
     </button>
@@ -101,6 +101,9 @@ export const ThumbUp = ({ down }) => (
 )
 export const Pause = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" {...stroke}><rect x="7" y="5" width="3" height="14" rx="1" /><rect x="14" y="5" width="3" height="14" rx="1" /></svg>
+)
+export const Bookmark = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" {...stroke}><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-5-7 5V4a1 1 0 0 1 1-1z" /></svg>
 )
 export const Inbox = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" {...stroke}><path d="M4 13l2-8h12l2 8M4 13v6h16v-6M4 13h5l1 2h4l1-2h5" /></svg>

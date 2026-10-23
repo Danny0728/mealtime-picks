@@ -39,6 +39,7 @@ export function emptyStore() {
     seen: [],
     seenRatings: {}, // id -> 'liked' | 'ok' | 'disliked' for titles watched outside the app
     saved: [],
+    watchlist: [], // { id, name, at }: sounds good, not tonight; kept out of the picks
     weights: null,
     lastAsk: { time: '45', mood: 'feelgood', who: 'family' },
   }
@@ -74,6 +75,7 @@ export function normalize(s) {
     seen: Array.isArray(s?.seen) ? s.seen : [],
     seenRatings: s?.seenRatings && typeof s.seenRatings === 'object' && !Array.isArray(s.seenRatings) ? s.seenRatings : {},
     saved: Array.isArray(s?.saved) ? s.saved : [],
+    watchlist: Array.isArray(s?.watchlist) ? s.watchlist : [],
     lastAsk: { ...base.lastAsk, ...(s?.lastAsk ?? {}) },
   }
 }
