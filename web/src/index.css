@@ -99,7 +99,19 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-tap-highlight-color: transparent;
+  /* Feels like an app: taps and long-presses don't select text or drag posters. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
+
+input, textarea, [contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+img { -webkit-user-drag: none; }
 
 button, a, input { font-family: inherit; }
 

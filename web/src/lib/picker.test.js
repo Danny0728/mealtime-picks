@@ -44,6 +44,26 @@ test('three different picks, best first', () => {
   assert.equal(picks[1].items[0].id, 'c', 'MMR should prefer the different title over the near-duplicate')
 })
 
+test('several moods mean any of them, not all of them', () => {
+  const cat = { items: [
+    ...['f1', 'f2', 'f3'].map((id) => item(id, { moods: { funny: 0.8 }, genres: [id] })),
+    ...['t1', 't2', 't3'].map((id) => item(id, { moods: { thriller: 0.8 }, genres: [id] })),
+    ...['d1', 'd2', 'd3'].map((id) => item(id, { moods: { docu: 0.9 }, q: 0.95, genres: [id] })),
+  ] }
+  const { picks, moodMatched } = pick(cat, store(), { time: '45', moods: ['funny', 'thriller'], who: 'adults' }, seq(0.9))
+  assert.equal(picks.length, 3)
+  assert.ok(moodMatched)
+  const ids = picks.map((p) => p.items[0].id)
+  assert.ok(ids.every((id) => /^[ft]/.test(id)), `only funny or thriller titles, got ${ids}`)
+  assert.ok(ids.some((id) => id[0] === 'f') && ids.some((id) => id[0] === 't'), `both moods represented, got ${ids}`)
+})
+
+test('no moods selected means any mood', () => {
+  const cat = { items: [item('a', { moods: {} }), item('b', { moods: { docu: 0.9 } })] }
+  const { picks } = pick(cat, store(), { time: '45', moods: [], who: 'adults' }, seq(0.9))
+  assert.equal(picks.length, 2)
+})
+
 test('two short videos are combined to fill the time', () => {
   const v = (id, m) => item(id, { kind: 'youtube', providers: ['youtube'], runtime: m, moods: { standup: 0.9 }, lang: '' })
   const cat = { items: [v('y1', 20), v('y2', 22), v('y3', 18)] }

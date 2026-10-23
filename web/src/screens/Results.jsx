@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MOODS, TIMES, WHO } from '../lib/picker.js'
+import { MOODS, TIMES, WHO, moodsOf } from '../lib/picker.js'
 import { ALL_PLATFORMS, SEEN_RATINGS } from '../lib/store.js'
 import { Back, Badge, Bookmark, External, IconButton, Poster, Shuffle } from '../components/ui.jsx'
 import { About, DetailBadges } from '../components/Details.jsx'
@@ -26,7 +26,8 @@ export function openUrl(item, platform) {
 export default function Results({ store, go, results, onPicked, onSeen, onLater, onShuffle }) {
   const { ask, picks } = results
   const [rating, setRating] = useState(null) // key of the pick asking "How was it?"
-  const summary = [label(TIMES, ask.time), label(MOODS, ask.mood), label(WHO, ask.who)].filter(Boolean).join(' · ')
+  const moods = moodsOf(ask).map((m) => label(MOODS, m)).filter(Boolean).join(' or ')
+  const summary = [label(TIMES, ask.time), moods, label(WHO, ask.who)].filter(Boolean).join(' · ')
   const mine = new Set(store.settings.platforms)
 
   return (
