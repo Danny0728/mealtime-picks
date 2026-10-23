@@ -13,7 +13,7 @@ export default function Watchlist({ store, go, byId, onWatch, onRemove }) {
       <header className="flex items-center gap-3">
         <IconButton label="Back" onClick={() => go('pick')}><Back /></IconButton>
         <div>
-          <h1 className="font-display text-[26px] leading-[1.1] font-bold">Watchlist</h1>
+          <h1 className="font-display text-[34px] leading-none tracking-[0.02em]">Watchlist</h1>
           <p className="text-sm text-muted">{entries.length ? `${entries.length} saved for later` : 'Nothing saved yet'}</p>
         </div>
       </header>
@@ -44,7 +44,7 @@ export default function Watchlist({ store, go, byId, onWatch, onRemove }) {
         return (
           <article key={w.id} className="flex flex-col gap-3 rounded-[18px] border border-hair bg-card p-3">
             <div className="flex gap-3">
-              <Poster item={item} />
+              <Poster item={item} size="lg" />
               <div className="flex min-w-0 flex-col gap-1.5">
                 <div className="flex flex-wrap gap-1.5">
                   <Badge>{platformName(platform)}</Badge>
@@ -64,11 +64,11 @@ export default function Watchlist({ store, go, byId, onWatch, onRemove }) {
                 target="_blank"
                 rel="noreferrer"
                 onClick={() => onWatch(w.id)}
-                className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-ink px-2 text-sm font-semibold text-white"
+                className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-2 text-sm font-semibold text-primary-ink"
               >
                 Open {platformName(platform)} <External />
               </a>
-              <button type="button" onClick={() => onRemove(w.id)} className="min-h-11 rounded-xl border border-line bg-card px-3 text-sm font-semibold">
+              <button type="button" onClick={() => onRemove(w.id)} className="min-h-11 rounded-xl border border-line bg-card/50 px-3 text-sm font-semibold backdrop-blur-md">
                 Remove
               </button>
             </div>

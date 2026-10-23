@@ -7,7 +7,7 @@ export function Chip({ on, onClick, children }) {
       aria-pressed={on}
       onClick={onClick}
       className={`inline-flex min-h-11 items-center justify-center rounded-full border px-4 text-[15px] font-medium transition-colors ${
-        on ? 'border-ink bg-ink text-white' : 'border-line bg-card text-ink'
+        on ? 'border-sel bg-sel font-semibold text-sel-ink' : 'border-line bg-card text-soft'
       }`}
     >
       {children}
@@ -19,7 +19,7 @@ export function Section({ title, hint, children }) {
   return (
     <section className="flex flex-col gap-2.5">
       <div className="flex flex-col gap-0.5">
-        <h2 className="text-[15px] font-semibold">{title}</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">{title}</h2>
         {hint && <p className="text-[13px] text-muted">{hint}</p>}
       </div>
       {children}
@@ -33,7 +33,7 @@ export function IconButton({ label, onClick, children }) {
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="relative flex size-11 shrink-0 items-center justify-center rounded-xl border border-line bg-card text-ink"
+      className="relative flex size-11 shrink-0 items-center justify-center rounded-xl border border-line bg-card/60 text-ink backdrop-blur-md"
     >
       {children}
     </button>
@@ -44,27 +44,33 @@ export function Badge({ children }) {
   return <span className="rounded-md bg-chip px-2 py-0.5 text-xs font-semibold text-ink">{children}</span>
 }
 
-const tints = [
+export const tints = [
   ['#D7E8E4', '#0B4F49'],
   ['#F5DDCF', '#8A2E07'],
   ['#E1E3F2', '#2E3478'],
   ['#EFE3C8', '#6B4A06'],
 ]
 
-export function Poster({ item, count = 1 }) {
+const posterSizes = {
+  md: 'h-[104px] w-[78px]',
+  lg: 'h-[138px] w-[92px] shadow-xl shadow-black/40',
+}
+
+export function Poster({ item, count = 1, size = 'md' }) {
   const [bg, fg] = tints[hash(item.id) % tints.length]
+  const dims = posterSizes[size] ?? posterSizes.md
   if (item.poster) {
     return (
       <img
         src={item.poster}
         alt=""
         loading="lazy"
-        className="h-[104px] w-[78px] shrink-0 rounded-[10px] bg-chip object-cover"
+        className={`${dims} shrink-0 rounded-[10px] bg-chip object-cover`}
       />
     )
   }
   return (
-    <div className="flex h-[104px] w-[78px] shrink-0 flex-col items-center justify-center gap-1 rounded-[10px]" style={{ background: bg, color: fg }}>
+    <div className={`${dims} flex shrink-0 flex-col items-center justify-center gap-1 rounded-[10px]`} style={{ background: bg, color: fg }}>
       <Play size={24} />
       {count > 1 && <span className="text-xs font-bold">× {count}</span>}
     </div>

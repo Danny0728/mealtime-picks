@@ -34,7 +34,7 @@ export const SEEN_RATINGS = [
 export function emptyStore() {
   return {
     version: 1,
-    settings: { platforms: ['netflix', 'prime', 'youtube'], languages: ['hi', 'en', 'mr'], familySafe: true, onboarded: false },
+    settings: { platforms: ['netflix', 'prime', 'youtube'], languages: ['hi', 'en', 'mr'], familySafe: true, onboarded: false, theme: 'system' },
     history: [],
     seen: [],
     seenRatings: {}, // id -> 'liked' | 'ok' | 'disliked' for titles watched outside the app

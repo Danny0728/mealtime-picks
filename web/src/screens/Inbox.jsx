@@ -27,7 +27,7 @@ export default function InboxScreen({ store, update, go, catalog, byId, incoming
       <header className="flex items-center gap-3">
         <IconButton label="Back" onClick={() => go('pick')}><Back /></IconButton>
         <div>
-          <h1 className="font-display text-[26px] leading-[1.1] font-bold">Saved finds</h1>
+          <h1 className="font-display text-[34px] leading-none tracking-[0.02em]">Saved finds</h1>
           <p className="text-sm text-muted">Share a reel to this app, or paste its caption</p>
         </div>
       </header>
@@ -67,7 +67,7 @@ export default function InboxScreen({ store, update, go, catalog, byId, incoming
               />
             </label>
           ))}
-          <button type="button" onClick={saveIt} className="min-h-[52px] rounded-2xl bg-accent text-base font-semibold text-white">
+          <button type="button" onClick={saveIt} className="min-h-[52px] rounded-2xl bg-linear-to-b from-cta-from to-cta-to text-base font-semibold text-cta-ink">
             Save
           </button>
         </section>

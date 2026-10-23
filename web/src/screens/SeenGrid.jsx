@@ -31,7 +31,7 @@ export default function SeenGrid({ store, update, go, catalog }) {
       <header className="flex items-center gap-3">
         <IconButton label="Back" onClick={() => go('setup')}><Back /></IconButton>
         <div>
-          <h1 className="font-display text-[26px] leading-[1.1] font-bold">Seen any of these?</h1>
+          <h1 className="font-display text-[34px] leading-none tracking-[0.02em]">Seen any of these?</h1>
           <p className="text-sm text-muted">{seen.size} marked · say how they were to sharpen your picks</p>
         </div>
       </header>
@@ -46,7 +46,7 @@ export default function SeenGrid({ store, update, go, catalog }) {
                 type="button"
                 aria-pressed={on}
                 onClick={() => toggle(it.id)}
-                className={`flex flex-col gap-1.5 rounded-xl border p-1.5 text-left ${on ? 'border-ink bg-ink text-white' : 'border-hair bg-card'}`}
+                className={`flex flex-col gap-1.5 rounded-xl border p-1.5 text-left ${on ? 'border-sel bg-sel text-sel-ink' : 'border-hair bg-card'}`}
               >
                 {it.poster ? (
                   <img src={it.poster} alt="" loading="lazy" className={`aspect-[2/3] w-full rounded-lg object-cover ${on ? 'opacity-50' : ''}`} />
@@ -64,7 +64,7 @@ export default function SeenGrid({ store, update, go, catalog }) {
                       aria-label={r.label}
                       aria-pressed={rating === r.id}
                       onClick={() => rate(it.id, r.id)}
-                      className={`min-h-9 rounded-lg border text-[12px] font-semibold ${rating === r.id ? 'border-ink bg-ink text-white' : 'border-line bg-card'}`}
+                      className={`min-h-9 rounded-lg border text-[12px] font-semibold ${rating === r.id ? 'border-sel bg-sel text-sel-ink' : 'border-line bg-card'}`}
                     >
                       {r.short}
                     </button>
@@ -75,7 +75,7 @@ export default function SeenGrid({ store, update, go, catalog }) {
           )
         })}
       </div>
-      <button type="button" onClick={() => go('setup')} className="sticky bottom-4 min-h-[52px] rounded-2xl bg-ink text-base font-semibold text-white">
+      <button type="button" onClick={() => go('setup')} className="sticky bottom-4 min-h-[52px] rounded-2xl bg-primary text-base font-semibold text-primary-ink">
         Done
       </button>
     </main>
