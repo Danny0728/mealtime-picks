@@ -52,6 +52,10 @@ export async function signOut() {
   await mods.auth.signOut(auth)
 }
 
+// An answer from the device's cached copy isn't the same as being offline:
+// Firestore gives one on every load before the server replies.
+const waiting = () => (navigator.onLine === false ? 'offline' : 'pending')
+
 // Firestore rejects undefined values; a JSON round trip drops them.
 const plain = (v) => JSON.parse(JSON.stringify(v))
 
@@ -78,7 +82,7 @@ export async function startSync(uid, { getLocal, setLocal, onStatus }) {
     if (!adopted) {
       // Only the server can say whether this account has data yet, so the
       // first merge waits for it (the device keeps working meanwhile).
-      if (fromCache) return onStatus('offline')
+      if (fromCache) return onStatus(waiting())
       adopted = true
       latestRemote = snap.exists() ? snap.data() : null
       const merged = pruneStore(adoptOnSignIn(getLocal(), latestRemote, uid), Date.now())
@@ -90,7 +94,7 @@ export async function startSync(uid, { getLocal, setLocal, onStatus }) {
     latestRemote = snap.data()
     if (hasPendingWrites) return onStatus('pending')
     setLocal(mergeStores(getLocal(), latestRemote))
-    onStatus(fromCache ? 'offline' : 'synced')
+    onStatus(fromCache ? waiting() : 'synced')
   }, () => onStatus('error'))
 
   const onOnline = () => onStatus('pending')
