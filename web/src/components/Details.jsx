@@ -56,17 +56,38 @@ function Overview({ text }) {
   useEffect(() => {
     const el = ref.current
     if (!el || open) return
+    // Measured again whenever the text's box changes (the screen sliding in,
+    // the font arriving, the phone turning): a card measured mid-transition
+    // would otherwise lose its "more" for good.
     const check = () => setLong(el.scrollHeight > el.clientHeight + 1)
     check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
+    let ro
+    if (typeof ResizeObserver === 'function') {
+      ro = new ResizeObserver(check)
+      ro.observe(el)
+    } else {
+      window.addEventListener('resize', check)
+    }
+    document.fonts?.ready.then(check)
+    return () => {
+      ro?.disconnect()
+      window.removeEventListener('resize', check)
+    }
   }, [open, text])
-  const cls = `text-[14px] leading-snug text-ink ${open ? '' : 'line-clamp-3'}`
-  if (!long && !open) return <p ref={ref} className={cls}>{text}</p>
+  // One paragraph that stays put (swapping elements would leave the checks
+  // above measuring a removed one); tapping it, or "more", opens it.
+  const toggle = () => setOpen((o) => !o)
   return (
-    <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)} className="flex flex-col items-start gap-0.5 text-left">
-      <span ref={ref} className={cls}>{text}</span>
-      <span className="text-[13px] font-semibold text-gold">{open ? 'less' : 'more'}</span>
-    </button>
+    <div className="flex flex-col items-start gap-0.5">
+      <p ref={ref} onClick={long || open ? toggle : undefined}
+        className={`text-[14px] leading-snug text-ink ${open ? '' : 'line-clamp-3'} ${long || open ? 'cursor-pointer' : ''}`}>
+        {text}
+      </p>
+      {(long || open) && (
+        <button type="button" aria-expanded={open} onClick={toggle} className="text-[13px] font-semibold text-gold">
+          {open ? 'less' : 'more'}
+        </button>
+      )}
+    </div>
   )
 }
