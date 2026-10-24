@@ -45,7 +45,7 @@ test('certificates read as ages', () => {
   assert.equal(certAge('weird'), null)
 })
 
-test('age rating chips: All ages, 13+, 18+', () => {
+test('age rating chips: U, 13+, 18+', () => {
   const cat = { items: [
     item('u', { cert: 'U' }),
     item('ua13', { cert: 'UA 13+', safe: false }),

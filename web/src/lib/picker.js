@@ -24,9 +24,9 @@ export const MOODS = [
 // Age rating, in the style of Indian certificates. `max` is the oldest
 // certificate age allowed; unrated titles fall back to the family-safe check.
 export const WHO = [
-  { id: 'all', label: 'All ages', max: 7 },
-  { id: '13', label: '13+', max: 13 },
-  { id: '18', label: '18+', max: Infinity },
+  { id: 'all', label: 'Whole gang', ages: 'U · any age', max: 7 },
+  { id: '13', label: 'Teens around', ages: '13+', max: 13 },
+  { id: '18', label: 'Kids asleep', ages: '18+', max: Infinity },
 ]
 // Older saves used who's watching.
 const LEGACY_WHO = { family: 'all', kids: 'all', adults: '18' }
@@ -140,7 +140,7 @@ function allowed(item, settings, who) {
   if (max === Infinity) return true
   const age = certAge(item.cert)
   if (age === null) return item.safe // unrated: trust the family-safe check
-  // All ages also respects what viewers said (e.g. "not for kids").
+  // U also respects what viewers said (e.g. "not for kids").
   return age <= max && (max >= 13 || item.safe)
 }
 
