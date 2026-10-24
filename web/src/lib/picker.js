@@ -7,6 +7,8 @@ export const TIMES = [
   { id: '30', label: '30 min', lo: 20, hi: 36, target: 30 },
   { id: '45', label: '45 min', lo: 30, hi: 52, target: 45 },
   { id: '60', label: '1 hr+', lo: 45, hi: 140, target: 75 },
+  // No time limit: length neither helps nor hurts, the content decides.
+  { id: 'any', label: 'Any', any: true },
 ]
 
 export const MOODS = [
@@ -19,11 +21,29 @@ export const MOODS = [
   { id: 'anime', label: 'Anime' },
 ]
 
+// Age rating, in the style of Indian certificates. `max` is the oldest
+// certificate age allowed; unrated titles fall back to the family-safe check.
 export const WHO = [
-  { id: 'family', label: 'Whole family' },
-  { id: 'kids', label: 'Kids around' },
-  { id: 'adults', label: 'Just adults' },
+  { id: 'all', label: 'All ages', max: 7 },
+  { id: '13', label: '13+', max: 13 },
+  { id: '18', label: '18+', max: Infinity },
 ]
+// Older saves used who's watching.
+const LEGACY_WHO = { family: 'all', kids: 'all', adults: '18' }
+export const whoId = (who) => LEGACY_WHO[who] ?? (WHO.some((w) => w.id === who) ? who : 'all')
+
+// A certificate's minimum age: CBFC (U, U/A 7+, U/A 13+, U/A 16+, A) plus
+// the common US ones TMDB sometimes has. Null when there isn't one we know.
+export function certAge(cert) {
+  const c = String(cert ?? '').toUpperCase().replace(/[\s/]/g, '')
+  if (!c) return null
+  if (c === 'U' || c === 'G' || c === 'TV-Y' || c === 'TV-G') return 0
+  if (c === 'UA7+' || c === 'PG' || c === 'TV-Y7' || c === 'TV-PG') return 7
+  if (c === 'UA' || c === 'UA13+' || c === 'PG-13' || c === 'TV-14') return 13
+  if (c === 'UA16+') return 16
+  if (c === 'A' || c === 'S' || c === '18+' || c === 'R' || c === 'NC-17' || c === 'TV-MA') return 18
+  return null
+}
 
 export const DEFAULT_WEIGHTS = { q: 0.3, r: 0.25, p: 0.2, g: 0.15, f: 0.1 }
 
@@ -41,6 +61,11 @@ export function timeById(id) {
 
 // How well an item fills the slot. Series return how many episodes fit.
 export function fit(item, slot) {
+  if (slot.any) {
+    // Series start with one episode; films and videos fit whatever their length.
+    if (item.kind === 'tv') return { score: 1, episodes: 1, minutes: item.epMin || null }
+    return { score: 1, minutes: item.runtime || null }
+  }
   if (item.kind === 'tv') {
     const ep = item.epMin || 30
     const n = Math.max(0, Math.floor((slot.target + 5) / ep))
@@ -109,8 +134,14 @@ function allowed(item, settings, who) {
   const platforms = new Set(settings.platforms)
   if (!item.providers.some((p) => platforms.has(p))) return false
   if (settings.otherLanguages === false && isSubtitled(item, settings)) return false
-  if ((settings.familySafe || who === 'kids' || who === 'family') && !item.safe) return false
-  return true
+  // Setup's "Family-safe only" is a hard limit, whatever rating is chosen.
+  if (settings.familySafe && !item.safe) return false
+  const max = WHO.find((w) => w.id === whoId(who)).max
+  if (max === Infinity) return true
+  const age = certAge(item.cert)
+  if (age === null) return item.safe // unrated: trust the family-safe check
+  // All ages also respects what viewers said (e.g. "not for kids").
+  return age <= max && (max >= 13 || item.safe)
 }
 
 /**
@@ -303,7 +334,7 @@ function continuePick(store, byId, slot) {
   return {
     key: `continue:${item.id}`, kind: 'continue', items: [item], minutes: f.minutes,
     episodes: f.episodes, epFrom: from, factors: { q: item.q, r: 0, p: 1, g: item.gem, f: f.score }, score: 1,
-    reason: `Pick up where you left off: episodes ${from}–${from + f.episodes - 1}.`,
+    reason: `Pick up where you left off: ${f.episodes > 1 ? `episodes ${from}–${from + f.episodes - 1}` : `episode ${from}`}.`,
   }
 }
 

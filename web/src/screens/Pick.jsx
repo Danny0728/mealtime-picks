@@ -3,9 +3,10 @@ import { MOODS, TIMES, WHO } from '../lib/picker.js'
 import { wallPosters } from '../lib/wall.js'
 import PosterWall from '../components/PosterWall.jsx'
 import { Avatar } from './Setup.jsx'
-import { Bookmark, Chip, IconButton, Inbox, Pause, Play, Section, Sliders, ThumbUp } from '../components/ui.jsx'
+import { Bookmark, Chip, IconButton, Inbox, Pause, Section, Sliders, ThumbUp } from '../components/ui.jsx'
 
 const DAY = 864e5
+const PROJECTOR_MS = 700
 
 export default function PickScreen({ store, go, catalog, byId, account, onPick, onFeedback }) {
   const [ask, setAsk] = useState(store.lastAsk)
@@ -24,6 +25,16 @@ export default function PickScreen({ store, go, catalog, byId, account, onPick, 
   const rate = (value, label) => {
     onFeedback(pending.at, value)
     setThanks(label)
+  }
+
+  // "Itadakimasu!": the projector switches on (a lamp glows, a beam sweeps up
+  // the screen), then the picks are shown.
+  const [projecting, setProjecting] = useState(false)
+  const itadakimasu = () => {
+    if (projecting) return // already on the way
+    if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) return onPick(ask)
+    setProjecting(true)
+    setTimeout(() => onPick(ask), PROJECTOR_MS)
   }
 
   const ready = catalog.status === 'ready'
@@ -86,7 +97,7 @@ export default function PickScreen({ store, go, catalog, byId, account, onPick, 
       )}
 
       <Section title="Time we have">
-        <div className="grid grid-cols-4 gap-2">
+        <div className="flex flex-wrap gap-2">
           {TIMES.map((t) => (
             <Chip key={t.id} on={ask.time === t.id} onClick={() => set('time', t.id)}>{t.label}</Chip>
           ))}
@@ -122,13 +133,27 @@ export default function PickScreen({ store, go, catalog, byId, account, onPick, 
         <button
           type="button"
           disabled={!ready || !store.settings.platforms.length}
-          onClick={() => onPick(ask)}
-          className="flex min-h-[58px] items-center justify-center gap-2.5 rounded-2xl bg-linear-to-b from-cta-from to-cta-to text-lg font-bold text-cta-ink shadow-[0_10px_30px_rgba(242,181,68,0.25)] disabled:opacity-50"
+          onClick={itadakimasu}
+          className="relative flex min-h-[62px] flex-col items-center justify-center rounded-2xl bg-linear-to-b from-cta-from to-cta-to py-2 text-cta-ink shadow-[0_10px_30px_rgba(242,181,68,0.25)] disabled:opacity-50"
         >
-          <Play /> {ready ? 'Pick 3 for us' : 'Loading…'}
+          <span className="flex items-center gap-2.5 text-lg leading-tight font-bold">
+            <span aria-hidden="true" className="relative text-xl">
+              <span className="steam" /><span className="steam" /><span className="steam" />
+              🍜
+            </span>
+            {ready ? 'Itadakimasu!' : 'Loading…'}
+          </span>
+          {/* For anyone who doesn't know the word: what it means and what it does. */}
+          {ready && <span className="text-xs font-medium opacity-75">let's eat · show me picks</span>}
         </button>
       </div>
       </div>
+      {projecting && (
+        <div aria-hidden="true" className="projector">
+          <div className="projector-beam" />
+          <div className="projector-lamp" />
+        </div>
+      )}
     </main>
   )
 }

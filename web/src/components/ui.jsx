@@ -99,8 +99,15 @@ export const Back = () => (
 export const External = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" {...stroke}><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg>
 )
-export const Shuffle = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" {...stroke}><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" /></svg>
+// Two curved arrows crossing (with a gap where they cross), pointing right.
+export const Shuffle = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" {...stroke} strokeWidth="2.2">
+    <path d="M3 7h3c4.5 0 6.5 10 11 10h3" />
+    <path d="M3 17h3c2 0 3.2-1.4 4.2-3.2" />
+    <path d="M13.8 10.2C14.8 8.4 16 7 18 7h2" />
+    <path d="M17 4l3 3-3 3" />
+    <path d="M17 14l3 3-3 3" />
+  </svg>
 )
 export const ThumbUp = ({ down }) => (
   <svg width="16" height="16" viewBox="0 0 24 24" {...stroke} style={down ? { transform: 'rotate(180deg)' } : undefined}>

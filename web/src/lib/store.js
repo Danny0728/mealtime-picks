@@ -41,7 +41,7 @@ export function emptyStore() {
     saved: [],
     watchlist: [], // { id, name, at }: sounds good, not tonight; kept out of the picks
     weights: null,
-    lastAsk: { time: '45', moods: ['feelgood'], who: 'family' },
+    lastAsk: { time: 'any', moods: ['feelgood'], who: 'all' },
     // Sync bookkeeping (see merge.js): when each item last changed or was
     // removed, and whose account this device's data belongs to.
     stamps: {},
@@ -90,11 +90,16 @@ export function normalize(s) {
   }
 }
 
+// Older saves had who's watching (family / kids / adults); it's an age rating now.
+const WHO_IDS = ['all', '13', '18']
+const LEGACY_WHO = { family: 'all', kids: 'all', adults: '18' }
+
 // Older saves had one `mood`; it's a list now (several moods mean any of them).
 function normalizeAsk(a) {
   const { mood, ...rest } = a
-  if (Array.isArray(a.moods) && !('mood' in a)) return a
-  return { ...rest, moods: mood ? [mood] : [] }
+  const who = LEGACY_WHO[a.who] ?? (WHO_IDS.includes(a.who) ? a.who : 'all')
+  if (Array.isArray(a.moods) && !('mood' in a)) return { ...a, who }
+  return { ...rest, moods: mood ? [mood] : [], who }
 }
 
 export function exportBackup(store) {
