@@ -31,7 +31,12 @@ function AccountSection({ account }) {
   return (
     <Section title="Your account">
       <div className="flex flex-col gap-3 rounded-2xl border border-hair bg-card p-4">
-        {user ? (
+        {account.checking ? (
+          <div className="flex items-center gap-3">
+            <span className="size-10 shrink-0 animate-pulse rounded-full bg-chip" />
+            <p className="text-[14px] text-muted">Checking your account…</p>
+          </div>
+        ) : user ? (
           <div className="flex items-center gap-3">
             <Avatar user={user} />
             <div className="min-w-0 flex-1">

@@ -4,6 +4,26 @@ import { useEffect, useRef, useState } from 'react'
 import { pushLocal, signIn, signOut, startSync, syncAvailable, watchAuth } from './sync.js'
 import { emptyStore } from './store.js'
 
+const USER_KEY = 'mealtime-picks:user'
+
+function rememberUser(u) {
+  try {
+    if (u) localStorage.setItem(USER_KEY, JSON.stringify(u))
+    else localStorage.removeItem(USER_KEY)
+  } catch {
+    // Storage blocked: nothing to recall, so Setup shows "Checking your account…" instead.
+  }
+}
+
+function recalledUser(owner) {
+  try {
+    const u = JSON.parse(localStorage.getItem(USER_KEY))
+    return u && u.uid === owner ? u : null
+  } catch {
+    return null
+  }
+}
+
 export function useAccount(store, setStore) {
   const available = syncAvailable()
   const [user, setUser] = useState(null)
@@ -18,11 +38,21 @@ export function useAccount(store, setStore) {
   // remembers its owner) or once someone taps Sign in, never just on opening.
   const [asked, setAsked] = useState(false)
   const active = available && (Boolean(store.owner) || asked)
+  // Firebase takes a moment to restore a sign-in after a reload. Until it
+  // answers, show the person last seen here instead of a Sign in button.
+  const [checking, setChecking] = useState(active)
   useEffect(() => {
     if (!active) return
     let stop = () => {}
     let cancelled = false
-    watchAuth(setUser).then((unsub) => (cancelled ? unsub() : (stop = unsub)))
+    const onUser = (u) => {
+      setUser(u)
+      setChecking(false)
+      rememberUser(u)
+    }
+    watchAuth(onUser)
+      .then((unsub) => (cancelled ? unsub() : (stop = unsub)))
+      .catch(() => setChecking(false)) // Firebase didn't load (e.g. offline): stop waiting
     return () => {
       cancelled = true
       stop()
@@ -51,10 +81,14 @@ export function useAccount(store, setStore) {
     if (user && store !== fromRemote.current) pushLocal(user.uid, store)
   }, [user, store])
 
+  const lastUser = checking ? recalledUser(store.owner) : null
   return {
     available,
-    user,
-    status,
+    // Sync itself only ever runs for the confirmed `user`, never the recalled one.
+    user: user ?? lastUser,
+    // Still waiting on Firebase with no one to recall: show neither person nor Sign in.
+    checking: checking && !user && !lastUser,
+    status: user || !lastUser ? status : 'pending',
     error,
     signedOut,
     signIn: async () => {
