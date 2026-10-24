@@ -1,10 +1,12 @@
-import { Back, Badge, External, IconButton, Poster } from '../components/ui.jsx'
-import { About, DetailBadges } from '../components/Details.jsx'
+import { Back, Badge, External, IconButton, PlatformIcons } from '../components/ui.jsx'
+import { CardGrid, TitleCard } from '../components/TitleCard.jsx'
 import { openUrl, platformName } from './Results.jsx'
+import { copyTitleFor } from '../lib/toast.js'
 
 // "Sounds good, not tonight": the family chooses from here themselves; the
 // picker leaves these out until they're watched or removed.
-export default function Watchlist({ store, go, byId, onWatch, onRemove }) {
+export default function Watchlist({ store, go, catalog, byId, onWatch, onRemove }) {
+  const logos = catalog.status === 'ready' ? catalog.data.platformLogos : null
   const mine = new Set(store.settings.platforms)
   const entries = [...store.watchlist].sort((a, b) => b.at - a.at)
 
@@ -24,59 +26,49 @@ export default function Watchlist({ store, go, byId, onWatch, onRemove }) {
         </p>
       )}
 
-      <div className="contents lg:grid lg:grid-cols-3 lg:items-start lg:gap-5">
+      <CardGrid>
       {entries.map((w) => {
-        const item = byId.get(w.id)
-        const platform = item?.providers.find((x) => mine.has(x))
-        if (!item || !platform) {
-          return (
-            <article key={w.id} className="flex items-center justify-between gap-3 rounded-[18px] border border-hair bg-card p-3 opacity-60">
-              <div className="min-w-0">
-                <h2 className="truncate text-[17px] leading-tight font-semibold">{item?.name ?? w.name ?? w.id}</h2>
-                <p className="text-sm text-muted">Not on your platforms right now</p>
-              </div>
-              <button type="button" onClick={() => onRemove(w.id)} className="min-h-11 shrink-0 rounded-xl border border-line px-3 text-sm font-semibold">
-                Remove
-              </button>
-            </article>
-          )
-        }
-        const size = item.kind === 'tv' ? `${item.epMin || 30} min episodes` : item.runtime ? `${item.runtime} min` : null
+        // Out of this week's list, the entry still has its name.
+        const known = byId.get(w.id)
+        const item = known ?? { id: w.id, name: w.name ?? w.id, providers: [] }
+        const platform = item.providers.find((x) => mine.has(x))
+        const size = !known ? null : item.kind === 'tv' ? `${item.epMin || 30} min episodes` : item.runtime ? `${item.runtime} min` : null
+        const remove = (
+          <button type="button" onClick={() => onRemove(w.id)} className="min-h-11 rounded-xl border border-line bg-card/50 px-3 text-sm font-semibold backdrop-blur-md">
+            Remove
+          </button>
+        )
         return (
-          <article key={w.id} className="flex flex-col gap-3 rounded-[18px] border border-hair bg-card p-3">
-            <div className="flex gap-3 lg:flex-col">
-              <Poster item={item} size="card" />
-              <div className="flex min-w-0 flex-col gap-1.5">
-                <div className="flex flex-wrap gap-1.5">
-                  <Badge>{platformName(platform)}</Badge>
-                  {size && <Badge>{size}</Badge>}
-                </div>
-                <h2 className="text-[17px] leading-tight font-semibold">
-                  {item.name}
-                  {item.year ? <span className="font-normal text-muted"> ({item.year})</span> : null}
-                </h2>
-                <DetailBadges item={item} languages={store.settings.languages} />
+          <TitleCard key={w.id} item={item} details={known} languages={store.settings.languages}
+            badges={<>
+              {platform && <Badge>{platformName(platform)}</Badge>}
+              {size && <Badge>{size}</Badge>}
+            </>}
+            // Not on the household's services: say where it is instead of a link.
+            extra={!platform && (item.providers.length
+              ? <PlatformIcons providers={item.providers} logos={logos} />
+              : <p className="text-sm text-muted">Not in this week's list</p>)}>
+            {platform ? (
+              <div className="grid grid-cols-[1fr_auto] gap-2">
+                <a
+                  href={openUrl(item, platform)}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => {
+                    onWatch(w.id)
+                    if (platform !== 'youtube') copyTitleFor(item.name, platformName(platform))
+                  }}
+                  className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-2 text-sm font-semibold text-primary-ink"
+                >
+                  Open {platformName(platform)} <External />
+                </a>
+                {remove}
               </div>
-            </div>
-            <About item={item} />
-            <div className="grid grid-cols-[1fr_auto] gap-2">
-              <a
-                href={openUrl(item, platform)}
-                target="_blank"
-                rel="noreferrer"
-                onClick={() => onWatch(w.id)}
-                className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-2 text-sm font-semibold text-primary-ink"
-              >
-                Open {platformName(platform)} <External />
-              </a>
-              <button type="button" onClick={() => onRemove(w.id)} className="min-h-11 rounded-xl border border-line bg-card/50 px-3 text-sm font-semibold backdrop-blur-md">
-                Remove
-              </button>
-            </div>
-          </article>
+            ) : remove}
+          </TitleCard>
         )
       })}
-      </div>
+      </CardGrid>
     </main>
   )
 }

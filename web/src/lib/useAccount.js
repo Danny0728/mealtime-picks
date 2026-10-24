@@ -15,13 +15,20 @@ function rememberUser(u) {
   }
 }
 
-function recalledUser(owner) {
+function readRemembered() {
   try {
     const u = JSON.parse(localStorage.getItem(USER_KEY))
-    return u && u.uid === owner ? u : null
+    return u?.uid ? u : null
   } catch {
     return null
   }
+}
+
+// The person last signed in here, if they match whose data this device holds
+// (before the first sync the device has no owner yet, so anyone remembered counts).
+function recalledUser(owner) {
+  const u = readRemembered()
+  return u && (!owner || u.uid === owner) ? u : null
 }
 
 export function useAccount(store, setStore) {
@@ -34,10 +41,13 @@ export function useAccount(store, setStore) {
   const fromRemote = useRef(null) // the store sync just applied: don't send it back
   storeRef.current = store
 
-  // Firebase loads only on devices that have signed in before (the store
-  // remembers its owner) or once someone taps Sign in, never just on opening.
+  // Firebase loads only on devices that have signed in before or once someone
+  // taps Sign in, never just on opening. "Signed in before" is remembered the
+  // moment Google confirms it, not when the first sync finishes: if Firestore
+  // can't be reached, a reload must still find the person signed in.
   const [asked, setAsked] = useState(false)
-  const active = available && (Boolean(store.owner) || asked)
+  const [remembered] = useState(() => Boolean(readRemembered()))
+  const active = available && (Boolean(store.owner) || remembered || asked)
   // Firebase takes a moment to restore a sign-in after a reload. Until it
   // answers, show the person last seen here instead of a Sign in button.
   const [checking, setChecking] = useState(active)
@@ -100,7 +110,9 @@ export function useAccount(store, setStore) {
       } catch (e) {
         const code = e?.code ?? ''
         if (code.includes('popup-blocked')) setError('Pop-up blocked. Allow pop-ups, or open the app in your browser to sign in.')
-        else if (!code.includes('popup-closed') && !code.includes('cancelled-popup')) setError("Couldn't sign in. Try again.")
+        else if (code.includes('unauthorized-domain')) setError(`Sign-in isn't allowed from ${location.hostname}. Open the app at localhost or its usual web address.`)
+        else if (code.includes('network-request-failed')) setError("Couldn't reach Google. Check your connection and try again.")
+        else if (!code.includes('popup-closed') && !code.includes('cancelled-popup')) setError(`Couldn't sign in (${code || 'unknown error'}). Try again.`)
       }
     },
     signOut: async () => {

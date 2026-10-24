@@ -56,7 +56,9 @@ type Catalog struct {
 	Sample      bool   `json:"sample"`
 	Attribution string `json:"attribution"`
 	Stats       Stats  `json:"stats"`
-	Items       []Item `json:"items"`
+	// Each streaming service's TMDB logo (slug -> URL), for "where it streams" icons.
+	PlatformLogos map[string]string `json:"platformLogos,omitempty"`
+	Items         []Item            `json:"items"`
 }
 
 const maxItems = 3000
@@ -153,11 +155,12 @@ func BuildCatalog(st *state.State, stats Stats, region string, now time.Time, yt
 	}
 
 	cat := Catalog{
-		Version:     1,
-		GeneratedAt: now.UTC().Format(time.RFC3339),
-		Region:      region,
-		Attribution: "Title data from TMDB. Where-to-watch data from JustWatch via TMDB.",
-		Stats:       stats,
+		Version:       1,
+		GeneratedAt:   now.UTC().Format(time.RFC3339),
+		Region:        region,
+		Attribution:   "Title data from TMDB. Where-to-watch data from JustWatch via TMDB.",
+		Stats:         stats,
+		PlatformLogos: st.PlatformLogos,
 	}
 	for _, k := range keep {
 		t := k.ts.Title

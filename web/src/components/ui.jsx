@@ -37,16 +37,52 @@ export function Section({ title, hint, children }) {
   )
 }
 
-export function IconButton({ label, onClick, children }) {
+// `small`: a little tighter on phones, for headers with several buttons.
+export function IconButton({ label, onClick, small = false, children }) {
   return (
     <button
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="relative flex size-11 shrink-0 items-center justify-center rounded-xl border border-line bg-card/60 text-ink backdrop-blur-md"
+      className={`relative flex size-11 shrink-0 items-center justify-center rounded-xl border border-line bg-card/60 text-ink backdrop-blur-md ${small ? 'max-sm:size-10' : ''}`}
     >
       {children}
     </button>
+  )
+}
+
+// Small marks for where a title streams, in each service's colour (simple
+// letter marks, not the services' logo artwork).
+const PLATFORM_MARKS = {
+  netflix: { mark: 'N', name: 'Netflix', bg: '#E50914', fg: '#fff' },
+  prime: { mark: 'prime', name: 'Prime Video', bg: '#00A8E1', fg: '#fff' },
+  jiohotstar: { mark: 'JH', name: 'JioHotstar', bg: '#0F1B4C', fg: '#fff' },
+  sonyliv: { mark: 'LIV', name: 'SonyLIV', bg: '#111', fg: '#F2B544' },
+  zee5: { mark: 'Z5', name: 'ZEE5', bg: '#6B2FA6', fg: '#fff' },
+  crunchyroll: { mark: 'CR', name: 'Crunchyroll', bg: '#F47521', fg: '#fff' },
+  youtube: { mark: '▶', name: 'YouTube', bg: '#FF0000', fg: '#fff' },
+}
+
+// `logos`: the services' own logos from TMDB (catalog.platformLogos), used
+// when the weekly fetch has supplied them; the letter marks fill in otherwise.
+export function PlatformIcons({ providers, logos }) {
+  const known = (providers ?? []).filter((p) => PLATFORM_MARKS[p])
+  if (!known.length) return null
+  return (
+    <div className="flex flex-wrap gap-1" aria-label={`On ${known.map((p) => PLATFORM_MARKS[p].name).join(', ')}`}>
+      {known.map((p) => {
+        const m = PLATFORM_MARKS[p]
+        if (logos?.[p]) {
+          return <img key={p} src={logos[p]} alt="" title={m.name} aria-hidden="true" loading="lazy" className="size-6 rounded-md object-cover" />
+        }
+        return (
+          <span key={p} title={m.name} aria-hidden="true" style={{ background: m.bg, color: m.fg }}
+            className="flex h-6 min-w-6 items-center justify-center rounded-md px-1.5 text-[10px] leading-none font-extrabold tracking-tight">
+            {m.mark}
+          </span>
+        )
+      })}
+    </div>
   )
 }
 
@@ -129,6 +165,30 @@ export const Pause = () => (
 )
 export const Bookmark = ({ size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" {...stroke}><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-5-7 5V4a1 1 0 0 1 1-1z" /></svg>
+)
+export const GridIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    {[3, 10, 17].flatMap((y) => [3, 10, 17].map((x) => <rect key={`${x}-${y}`} x={x} y={y} width="4.5" height="4.5" rx="1" />))}
+  </svg>
+)
+export const ListIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+    {[5, 12, 19].map((y) => (
+      <g key={y}>
+        <circle cx="4.5" cy={y} r="1.8" fill="currentColor" />
+        <path d={`M9.5 ${y}H21`} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+      </g>
+    ))}
+  </svg>
+)
+export const SearchIcon = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" {...stroke}><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
+)
+export const Lock = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" {...stroke}><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
+)
+export const Flame = () => (
+  <svg width="19" height="19" viewBox="0 0 24 24" {...stroke}><path d="M12 22c4 0 7-2.8 7-6.8 0-3.6-2.4-6-4.2-8.2-.4 2-1.4 3.3-2.8 4C12 7.6 10.6 4.4 8 2c.2 3.4-1.6 5.6-3 7.8C4.3 11 4 12.3 4 14c0 4.6 3.6 8 8 8z" /><path d="M12 22c-1.7 0-3-1.3-3-3 0-1.8 1.4-2.8 2.2-4.4.9 1.2 3.8 2.4 3.8 4.6 0 1.6-1.3 2.8-3 2.8z" /></svg>
 )
 export const Inbox = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" {...stroke}><path d="M4 13l2-8h12l2 8M4 13v6h16v-6M4 13h5l1 2h4l1-2h5" /></svg>

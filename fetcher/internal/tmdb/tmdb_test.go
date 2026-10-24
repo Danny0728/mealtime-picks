@@ -16,7 +16,7 @@ const movieDetails = `{
   "id": 550, "runtime": 139, "genres": [{"id":18,"name":"Drama"}],
   "keywords": {"keywords": [{"id":1,"name":"dual identity"}]},
   "watch/providers": {"results": {"IN": {"link": "https://www.themoviedb.org/movie/550/watch?locale=IN",
-     "flatrate": [{"provider_id": 8, "provider_name": "Netflix"}, {"provider_id": 1796, "provider_name": "Netflix basic with Ads"}],
+     "flatrate": [{"provider_id": 8, "provider_name": "Netflix", "logo_path": "/netflix.jpg"}, {"provider_id": 1796, "provider_name": "Netflix basic with Ads", "logo_path": "/netflix-ads.jpg"}],
      "ads": [{"provider_id": 2336, "provider_name": "JioHotstar"}]}}},
   "release_dates": {"results": [{"iso_3166_1": "IN", "release_dates": [{"certification": "A"}]}]},
   "credits": {"cast": [{"name": "Edward Norton", "order": 0}, {"name": "Brad Pitt", "order": 1},
@@ -83,6 +83,10 @@ func TestEnrich(t *testing.T) {
 	}
 	if got := strings.Join(m.Cast, ", "); got != "Edward Norton, Brad Pitt, Helena Bonham Carter" {
 		t.Errorf("cast should be the top three billed, got %q", got)
+	}
+	// The service's own TMDB logo, the first one seen for that service.
+	if got := c.ProviderLogos()["netflix"]; got != "https://image.tmdb.org/t/p/w92/netflix.jpg" {
+		t.Errorf("netflix logo = %q", got)
 	}
 
 	tv := model.Title{ID: "tmdb:tv:1", Kind: "tv"}

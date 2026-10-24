@@ -102,6 +102,15 @@ func TestPoolsReachBeyondHomeLanguages(t *testing.T) {
 	}
 }
 
+func TestCatalogCarriesPlatformLogos(t *testing.T) {
+	_, st := world(t)
+	st.PlatformLogos = map[string]string{"netflix": "https://image.tmdb.org/t/p/w92/n.jpg"}
+	cat := BuildCatalog(st, Stats{}, "IN", time.Unix(1_790_000_000, 0), 8, 90)
+	if cat.PlatformLogos["netflix"] != "https://image.tmdb.org/t/p/w92/n.jpg" {
+		t.Errorf("catalog should carry the platform logos, got %v", cat.PlatformLogos)
+	}
+}
+
 func TestAnimeGetsTheAnimeMood(t *testing.T) {
 	_, st := world(t)
 	a := title("tmdb:tv:9", "tv", "Death Note", 4000, "Animation", "Mystery")

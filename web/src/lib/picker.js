@@ -130,6 +130,9 @@ export function isSubtitled(item, settings) {
 // about what a big jump in community love and hidden-gem score is worth.
 const SUBTITLE_PENALTY = 0.08
 
+// A Vault title is a little more likely to come up, still behind a clearly better pick.
+const VAULT_BOOST = 0.06
+
 function allowed(item, settings, who) {
   const platforms = new Set(settings.platforms)
   if (!item.providers.some((p) => platforms.has(p))) return false
@@ -159,6 +162,7 @@ export function pick(catalog, store, ask, rng = Math.random, keep = null) {
   const byId = new Map(catalog.items.map((it) => [it.id, it]))
   const items = (ids) => ids.map((id) => byId.get(id)).filter(Boolean)
   const taste = { liked: items(liked), disliked: items(disliked), saved: items(saved) }
+  const vault = new Set(store.vault ?? []) // ids in the owner's Vault (not saved in the store)
 
   const moods = moodsOf(ask)
   const candidates = []
@@ -181,6 +185,11 @@ export function pick(catalog, store, ask, rng = Math.random, keep = null) {
     const c = scoreOne(item, rel, f, w, taste, recentShown)
     // Asking for anime is asking for Japanese with subtitles: no penalty then.
     if (isSubtitled(item, store.settings) && mood !== 'anime') c.score -= SUBTITLE_PENALTY
+    // The owner's hand-picked must-watch titles get a nudge and say so.
+    if (vault.has(item.id)) {
+      c.score += VAULT_BOOST
+      c.reason = '⭐ From the Vault: hand-picked must-watch.'
+    }
     candidates.push({ ...c, mood: moods.length > 1 ? mood : null })
   }
 

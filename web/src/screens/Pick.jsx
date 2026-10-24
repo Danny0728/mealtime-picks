@@ -3,12 +3,12 @@ import { MOODS, TIMES, WHO } from '../lib/picker.js'
 import { wallPosters } from '../lib/wall.js'
 import PosterWall from '../components/PosterWall.jsx'
 import { Avatar } from './Setup.jsx'
-import { Bookmark, Chip, IconButton, Inbox, Pause, Section, Sliders, ThumbUp } from '../components/ui.jsx'
+import { Bookmark, Chip, Flame, IconButton, Inbox, Lock, Pause, SearchIcon, Section, Sliders, ThumbUp } from '../components/ui.jsx'
 
 const DAY = 864e5
 const PROJECTOR_MS = 700
 
-export default function PickScreen({ store, go, catalog, byId, account, onPick, onFeedback }) {
+export default function PickScreen({ store, go, catalog, byId, account, vault, onPick, onFeedback }) {
   const [ask, setAsk] = useState(store.lastAsk)
   const [thanks, setThanks] = useState(null)
   const set = (k, v) => setAsk((a) => ({ ...a, [k]: v }))
@@ -50,9 +50,9 @@ export default function PickScreen({ store, go, catalog, byId, account, onPick, 
     <main className="relative isolate flex min-h-full flex-1 flex-col gap-[22px] overflow-hidden px-5 pt-6 pb-7 lg:grid lg:min-h-screen lg:grid-cols-[1fr_400px] lg:grid-rows-[auto_1fr] lg:gap-x-16 lg:overflow-visible lg:px-14 lg:py-10">
       <div className="absolute inset-0 -z-10 lg:fixed"><PosterWall posters={posters} /></div>
       <header className="flex items-center justify-between gap-3 lg:col-span-2">
-        <p className="font-display text-xl tracking-[0.14em] text-gold">MEALTIME PICKS</p>
-        <div className="flex gap-2">
-          <IconButton label={`Watchlist (${store.watchlist.length})`} onClick={() => go('watchlist')}>
+        <p className="font-display text-base tracking-[0.14em] text-gold sm:text-xl">MEALTIME PICKS</p>
+        <div className="flex gap-1 sm:gap-2">
+          <IconButton small label={`Watchlist (${store.watchlist.length})`} onClick={() => go('watchlist')}>
             <Bookmark size={20} />
             {store.watchlist.length > 0 && (
               <span className="absolute -top-1.5 -right-1.5 min-w-5 rounded-full bg-linear-to-b from-cta-from to-cta-to px-1 text-center text-[11px] leading-5 font-bold text-cta-ink">
@@ -60,8 +60,10 @@ export default function PickScreen({ store, go, catalog, byId, account, onPick, 
               </span>
             )}
           </IconButton>
-          <IconButton label="Saved from Instagram" onClick={() => go('inbox')}><Inbox /></IconButton>
-          <IconButton label="Setup" onClick={() => go('setup')}>
+          <IconButton small label="The Vault" onClick={() => go('vault')}><span className="text-gold"><Lock /></span></IconButton>
+          <IconButton small label="Popular" onClick={() => go('popular')}><Flame /></IconButton>
+          <IconButton small label="Saved from Instagram" onClick={() => go('inbox')}><Inbox /></IconButton>
+          <IconButton small label="Setup" onClick={() => go('setup')}>
             {account.user ? <Avatar user={account.user} size={28} /> : <Sliders />}
           </IconButton>
         </div>
@@ -94,6 +96,14 @@ export default function PickScreen({ store, go, catalog, byId, account, onPick, 
         <p className="rounded-2xl bg-good-bg px-4 py-3.5 text-[15px] font-medium text-good">
           Noted: {thanks}. That helps the next picks.
         </p>
+      )}
+
+      {/* Search is the owner's tool for filling the Vault. */}
+      {vault.admin && (
+        <button type="button" onClick={() => go('search')}
+          className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-line bg-card/60 text-sm font-semibold backdrop-blur-md">
+          <SearchIcon /> Search
+        </button>
       )}
 
       <Section title="Time we have">

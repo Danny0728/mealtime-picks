@@ -1,4 +1,5 @@
 // What a title is, on the card itself, so nobody googles it before opening.
+import { useEffect, useRef, useState } from 'react'
 import { Badge } from './ui.jsx'
 
 const compact = new Intl.NumberFormat('en-IN', { notation: 'compact', maximumFractionDigits: 1 })
@@ -41,8 +42,31 @@ export function About({ item }) {
   if (!item.overview && !item.cast?.length) return null
   return (
     <div className="flex flex-col gap-1">
-      {item.overview && <p className="text-[14px] leading-snug text-ink">{item.overview}</p>}
+      {item.overview && <Overview text={item.overview} />}
       {item.cast?.length > 0 && <p className="text-[13px] text-soft">With {item.cast.join(', ')}</p>}
     </div>
+  )
+}
+
+// Three lines, so cards line up; a long one opens in place when tapped.
+function Overview({ text }) {
+  const ref = useRef(null)
+  const [open, setOpen] = useState(false)
+  const [long, setLong] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el || open) return
+    const check = () => setLong(el.scrollHeight > el.clientHeight + 1)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [open, text])
+  const cls = `text-[14px] leading-snug text-ink ${open ? '' : 'line-clamp-3'}`
+  if (!long && !open) return <p ref={ref} className={cls}>{text}</p>
+  return (
+    <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)} className="flex flex-col items-start gap-0.5 text-left">
+      <span ref={ref} className={cls}>{text}</span>
+      <span className="text-[13px] font-semibold text-gold">{open ? 'less' : 'more'}</span>
+    </button>
   )
 }
