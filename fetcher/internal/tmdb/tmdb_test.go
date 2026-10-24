@@ -97,3 +97,44 @@ func TestEnrich(t *testing.T) {
 		t.Fatalf("tv: %+v", tv)
 	}
 }
+
+func TestLoadProviderLogos(t *testing.T) {
+	var paths []string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		paths = append(paths, r.URL.Path+"?"+r.URL.RawQuery)
+		if strings.HasSuffix(r.URL.Path, "/tv") {
+			w.Write([]byte(`{"results":[
+			  {"provider_name":"Crunchyroll","logo_path":"/cr.jpg","display_priorities":{"IN":5}},
+			  {"provider_name":"Sony Liv","logo_path":"/sony.jpg","display_priorities":{"IN":9}}]}`))
+			return
+		}
+		w.Write([]byte(`{"results":[
+		  {"provider_name":"Netflix basic with Ads","logo_path":"/netflix-ads.jpg","display_priorities":{"IN":40}},
+		  {"provider_name":"Netflix","logo_path":"/netflix.jpg","display_priorities":{"IN":2}},
+		  {"provider_name":"Some Service","logo_path":""}]}`))
+	}))
+	defer srv.Close()
+	BaseURL = srv.URL
+	c := New("tok", "IN")
+
+	if err := c.LoadProviderLogos(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	want := map[string]string{
+		"netflix":     "https://image.tmdb.org/t/p/w92/netflix.jpg", // the main brand, not the ads tier
+		"crunchyroll": "https://image.tmdb.org/t/p/w92/cr.jpg",
+		"sonyliv":     "https://image.tmdb.org/t/p/w92/sony.jpg",
+	}
+	got := c.ProviderLogos()
+	for k, v := range want {
+		if got[k] != v {
+			t.Errorf("%s logo = %q, want %q", k, got[k], v)
+		}
+	}
+	if _, ok := got["someservice"]; ok {
+		t.Error("a service without a logo should be skipped")
+	}
+	if len(paths) != 2 || !strings.Contains(paths[0], "watch_region=IN") {
+		t.Errorf("should ask for movie and tv services in the region: %v", paths)
+	}
+}

@@ -6,10 +6,13 @@ import { About, DetailBadges } from './Details.jsx'
 
 // `details`: the catalog's entry, when the title is in this week's list
 // (ratings, age and genres come from there). `badges` sit above the title,
-// `extra` under it; `children` are the buttons.
-export function TitleCard({ item, details = item, languages, badges, extra, children }) {
+// `extra` under it; `children` are the buttons. `watched`: already seen
+// here, so the card fades back (full again on hover or focus) with a pill.
+export function TitleCard({ item, details = item, languages, badges, extra, watched = false, children }) {
   return (
-    <article className="relative isolate flex flex-col gap-3 overflow-hidden rounded-[22px] border border-hair bg-card p-3.5">
+    <article className={`relative isolate flex flex-col gap-3 overflow-hidden rounded-[22px] border border-hair bg-card p-3.5 transition-opacity ${
+      watched ? 'opacity-60 saturate-50 hover:opacity-100 hover:saturate-100 focus-within:opacity-100 focus-within:saturate-100' : ''
+    }`}>
       {/* A blurred copy of the poster behind, a veil so text stays readable. */}
       {item.poster && (
         <>
@@ -20,7 +23,12 @@ export function TitleCard({ item, details = item, languages, badges, extra, chil
       <div className="flex gap-3 lg:flex-col">
         <Poster item={item} size="card" />
         <div className="flex min-w-0 flex-col gap-1.5">
-          {badges && <div className="flex flex-wrap gap-1.5">{badges}</div>}
+          {(badges || watched) && (
+            <div className="flex flex-wrap gap-1.5">
+              {watched && <span className="rounded-md bg-sel px-2 py-0.5 text-xs font-semibold text-sel-ink">✓ Watched</span>}
+              {badges}
+            </div>
+          )}
           <h2 className="text-[19px] leading-tight font-bold">
             {item.name}
             {item.year ? <span className="font-normal text-soft"> ({item.year})</span> : null}

@@ -570,6 +570,10 @@ func (p *Pipeline) enrich(ctx context.Context) error {
 		cands = append(cands, cand{ts, prio})
 	}
 	sort.Slice(cands, func(i, j int) bool { return cands[i].prio > cands[j].prio })
+	// Every service's logo up front; the refreshes below only fill gaps.
+	if err := p.tmdb.LoadProviderLogos(ctx); err != nil {
+		p.Log.Printf("provider logos: %v", err)
+	}
 	n := 0
 	for _, c := range cands {
 		if n >= p.Cfg.Budgets.TMDBDetails {
@@ -583,7 +587,7 @@ func (p *Pipeline) enrich(ctx context.Context) error {
 		n++
 	}
 	p.Log.Printf("tmdb details: %d refreshed", n)
-	// Keep the streaming services' logos seen while refreshing, across runs.
+	// Keep the streaming services' logos, across runs.
 	for slug, url := range p.tmdb.ProviderLogos() {
 		if p.State.PlatformLogos == nil {
 			p.State.PlatformLogos = map[string]string{}

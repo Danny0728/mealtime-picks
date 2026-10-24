@@ -210,6 +210,47 @@ func (c *Client) ProviderLogos() map[string]string {
 	return out
 }
 
+// LoadProviderLogos reads TMDB's list of streaming services in the region
+// (movies and TV), so every service has its logo even when none of its
+// titles were refreshed this run. Lower display_priority is the main brand
+// ("Netflix" before "Netflix basic with Ads"), so it's the one kept.
+func (c *Client) LoadProviderLogos(ctx context.Context) error {
+	type entry struct {
+		Name     string `json:"provider_name"`
+		Logo     string `json:"logo_path"`
+		Priority int    `json:"display_priority"`
+	}
+	best := map[string]entry{}
+	for _, kind := range []string{"movie", "tv"} {
+		var r struct {
+			Results []struct {
+				entry
+				Priorities map[string]int `json:"display_priorities"`
+			} `json:"results"`
+		}
+		if err := c.get(ctx, "/watch/providers/"+kind, url.Values{"watch_region": {c.region}}, &r); err != nil {
+			return err
+		}
+		for _, p := range r.Results {
+			e := p.entry
+			if pr, ok := p.Priorities[c.region]; ok {
+				e.Priority = pr
+			}
+			s := ProviderSlug(e.Name)
+			if s == "" || e.Logo == "" {
+				continue
+			}
+			if cur, ok := best[s]; !ok || e.Priority < cur.Priority {
+				best[s] = e
+			}
+		}
+	}
+	for s, e := range best {
+		c.logos[s] = logoBase + e.Logo
+	}
+	return nil
+}
+
 type regionProviders struct {
 	Link     string          `json:"link"`
 	Flatrate []providerEntry `json:"flatrate"`
