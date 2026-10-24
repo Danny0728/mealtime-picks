@@ -9,6 +9,9 @@ test('older backups without seen ratings still load', () => {
   assert.deepEqual(s.watchlist, [])
   assert.equal(s.settings.theme, 'system')
   assert.equal(s.settings.otherLanguages, true)
+  assert.deepEqual(s.stamps, {})
+  assert.deepEqual(s.tombs, {})
+  assert.equal(s.owner, null)
 })
 
 test('a single saved mood becomes a list of moods', () => {
