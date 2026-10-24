@@ -1,14 +1,24 @@
 // Small shared pieces: chips, buttons, icons, poster.
+import { useState } from 'react'
 
 export function Chip({ on, onClick, children }) {
+  // Selecting a chip pops it with a soft ripple, but only when tapped:
+  // chips already selected when a screen opens stay still. (Held in state:
+  // a class added straight to the element is wiped by React's next render.)
+  const [popping, setPopping] = useState(false)
+  const tap = (e) => {
+    if (!on) setPopping(true)
+    onClick?.(e)
+  }
   return (
     <button
       type="button"
       aria-pressed={on}
-      onClick={onClick}
-      className={`inline-flex min-h-11 items-center justify-center rounded-full border px-4 text-[15px] font-medium transition-colors ${
+      onClick={tap}
+      onAnimationEnd={(e) => { if (e.target === e.currentTarget && e.animationName === 'chip-pop') setPopping(false) }}
+      className={`relative inline-flex min-h-11 items-center justify-center rounded-full border px-4 text-[15px] font-medium transition-[background-color,border-color,color] duration-200 ${
         on ? 'border-sel bg-sel font-semibold text-sel-ink' : 'border-line bg-card text-soft'
-      }`}
+      } ${popping ? 'chip-pop' : ''}`}
     >
       {children}
     </button>

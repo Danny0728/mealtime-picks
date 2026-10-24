@@ -104,7 +104,7 @@ export default function PickScreen({ store, go, catalog, byId, account, onPick, 
         </div>
       </Section>
 
-      <Section title="Mood" hint="Pick any you're up for, or none for anything.">
+      <Section title="What are you looking for?" hint="Pick any you're up for, or none for anything.">
         <div className="flex flex-wrap gap-2">
           {MOODS.map((m) => (
             <Chip key={m.id} on={ask.moods.includes(m.id)} onClick={() => toggleMood(m.id)}>{m.label}</Chip>
@@ -112,10 +112,15 @@ export default function PickScreen({ store, go, catalog, byId, account, onPick, 
         </div>
       </Section>
 
-      <Section title="Age rating">
+      <Section title="Who's on the couch?">
         <div className="flex flex-wrap gap-2">
           {WHO.map((w) => (
-            <Chip key={w.id} on={ask.who === w.id} onClick={() => set('who', w.id)}>{w.label}</Chip>
+            <Chip key={w.id} on={ask.who === w.id} onClick={() => set('who', w.id)}>
+              <span className="flex flex-col items-center py-1 leading-tight">
+                <span>{w.label}</span>
+                <span className="text-[11px] font-normal opacity-75">{w.ages}</span>
+              </span>
+            </Chip>
           ))}
         </div>
       </Section>
