@@ -82,3 +82,4 @@ jobs:
   deploy:
     needs: fetch
     uses: ./.github/workflows/deploy.yml
+    secrets: inherit # the build needs the Firebase config secrets

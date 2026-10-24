@@ -3,6 +3,8 @@ import { load, save } from './lib/store.js'
 import { pick, updateWeights } from './lib/picker.js'
 import { readShareParams } from './lib/share.js'
 import { applyTheme } from './lib/theme.js'
+import { stampChanges } from './lib/merge.js'
+import { useAccount } from './lib/useAccount.js'
 import Setup from './screens/Setup.jsx'
 import PickScreen from './screens/Pick.jsx'
 import Results from './screens/Results.jsx'
@@ -48,6 +50,8 @@ export default function App() {
 
   useEffect(() => applyTheme(store.settings.theme), [store.settings.theme])
 
+  const account = useAccount(store, setStore)
+
   // A post shared into the app from Instagram (Android share sheet).
   useEffect(() => {
     const shared = readShareParams(window.location.search)
@@ -64,7 +68,8 @@ export default function App() {
   const items = catalog.status === 'ready' ? catalog.data.items : []
   const byId = useMemo(() => new Map(items.map((i) => [i.id, i])), [items])
 
-  const update = (fn) => setStore((s) => fn(structuredClone(s)))
+  // Every change is time-stamped here, so sync can merge copies from other devices.
+  const update = (fn) => setStore((s) => stampChanges(s, fn(structuredClone(s)), Date.now()))
 
   const runPick = (ask, extraExclude = []) => {
     if (catalog.status !== 'ready') return
@@ -110,7 +115,7 @@ export default function App() {
     for (const a of picks.slice(keep.length)) {
       for (const it of a.items) next.history.push({ id: it.id, status: 'shown', feedback: null, at: now, session: results.session })
     }
-    setStore(next)
+    setStore(stampChanges(store, next, now))
     setResults((r) => r && { ...r, picks })
   }
 
@@ -158,7 +163,7 @@ export default function App() {
     })
   }
 
-  const common = { store, update, go, catalog, byId }
+  const common = { store, update, go, catalog, byId, account }
 
   let screen
   switch (route) {

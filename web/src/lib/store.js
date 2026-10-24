@@ -42,8 +42,15 @@ export function emptyStore() {
     watchlist: [], // { id, name, at }: sounds good, not tonight; kept out of the picks
     weights: null,
     lastAsk: { time: '45', moods: ['feelgood'], who: 'family' },
+    // Sync bookkeeping (see merge.js): when each item last changed or was
+    // removed, and whose account this device's data belongs to.
+    stamps: {},
+    tombs: {},
+    owner: null,
   }
 }
+
+const isMap = (v) => Boolean(v) && typeof v === 'object' && !Array.isArray(v)
 
 export function load() {
   try {
@@ -77,6 +84,9 @@ export function normalize(s) {
     saved: Array.isArray(s?.saved) ? s.saved : [],
     watchlist: Array.isArray(s?.watchlist) ? s.watchlist : [],
     lastAsk: normalizeAsk({ ...base.lastAsk, ...(s?.lastAsk ?? {}) }),
+    stamps: isMap(s?.stamps) ? s.stamps : {},
+    tombs: isMap(s?.tombs) ? s.tombs : {},
+    owner: typeof s?.owner === 'string' ? s.owner : null,
   }
 }
 

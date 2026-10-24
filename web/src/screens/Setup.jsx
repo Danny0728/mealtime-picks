@@ -9,7 +9,60 @@ const THEMES = [
   { id: 'dark', label: 'Dark' },
 ]
 
-export default function Setup({ store, update, go, catalog }) {
+const STATUS = {
+  synced: 'Synced',
+  pending: 'Syncing…',
+  offline: 'Offline, will sync',
+  error: "Couldn't sync, retrying",
+}
+
+export function Avatar({ user, size = 40 }) {
+  const style = { width: size, height: size }
+  if (user.photo) return <img src={user.photo} alt="" referrerPolicy="no-referrer" style={style} className="shrink-0 rounded-full object-cover" />
+  return (
+    <span style={style} className="flex shrink-0 items-center justify-center rounded-full bg-sel text-sm font-bold text-sel-ink">
+      {user.name.slice(0, 1).toUpperCase()}
+    </span>
+  )
+}
+
+function AccountSection({ account }) {
+  const { user, status, error, signedOut } = account
+  return (
+    <Section title="Your account">
+      <div className="flex flex-col gap-3 rounded-2xl border border-hair bg-card p-4">
+        {user ? (
+          <div className="flex items-center gap-3">
+            <Avatar user={user} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-base font-semibold">{user.name}</p>
+              <p className={`text-[13px] ${status === 'error' ? 'text-accent-ink' : 'text-muted'}`}>{STATUS[status] ?? STATUS.synced}</p>
+            </div>
+            <button type="button" onClick={account.signOut} className="min-h-11 rounded-xl border border-line bg-card px-4 text-sm font-semibold">
+              Sign out
+            </button>
+          </div>
+        ) : (
+          <>
+            <p className="text-[14px] text-soft">Keeps your seen list, ratings and watchlist the same on all your devices.</p>
+            <button type="button" onClick={account.signIn} className="min-h-12 rounded-xl bg-primary text-[15px] font-semibold text-primary-ink">
+              Sign in with Google
+            </button>
+            {signedOut && (
+              <p className="text-[13px] text-muted">
+                This device keeps a copy.{' '}
+                <button type="button" onClick={account.clearDevice} className="font-semibold text-gold underline">Clear this device</button>
+              </p>
+            )}
+          </>
+        )}
+        {error && <p className="text-[13px] text-accent-ink">{error}</p>}
+      </div>
+    </Section>
+  )
+}
+
+export default function Setup({ store, update, go, catalog, account }) {
   const fileRef = useRef(null)
   const [msg, setMsg] = useState('')
   const s = store.settings
@@ -55,6 +108,8 @@ export default function Setup({ store, update, go, catalog }) {
           Done
         </button>
       </header>
+
+      {account.available && <AccountSection account={account} />}
 
       <Section title="What you have">
         <div className="flex flex-col rounded-2xl border border-hair bg-card">

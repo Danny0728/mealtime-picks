@@ -2,11 +2,12 @@ import { useMemo, useState } from 'react'
 import { MOODS, TIMES, WHO } from '../lib/picker.js'
 import { wallPosters } from '../lib/wall.js'
 import PosterWall from '../components/PosterWall.jsx'
+import { Avatar } from './Setup.jsx'
 import { Bookmark, Chip, IconButton, Inbox, Pause, Play, Section, Sliders, ThumbUp } from '../components/ui.jsx'
 
 const DAY = 864e5
 
-export default function PickScreen({ store, go, catalog, byId, onPick, onFeedback }) {
+export default function PickScreen({ store, go, catalog, byId, account, onPick, onFeedback }) {
   const [ask, setAsk] = useState(store.lastAsk)
   const [thanks, setThanks] = useState(null)
   const set = (k, v) => setAsk((a) => ({ ...a, [k]: v }))
@@ -49,7 +50,9 @@ export default function PickScreen({ store, go, catalog, byId, onPick, onFeedbac
             )}
           </IconButton>
           <IconButton label="Saved from Instagram" onClick={() => go('inbox')}><Inbox /></IconButton>
-          <IconButton label="Setup" onClick={() => go('setup')}><Sliders /></IconButton>
+          <IconButton label="Setup" onClick={() => go('setup')}>
+            {account.user ? <Avatar user={account.user} size={28} /> : <Sliders />}
+          </IconButton>
         </div>
       </header>
 
