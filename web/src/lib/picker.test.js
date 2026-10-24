@@ -54,11 +54,17 @@ test('age rating chips: All ages, 13+, 18+', () => {
     item('unrated-safe', { cert: undefined, genres: ['Drama'] }),
     item('unrated-dark', { cert: undefined, safe: false, genres: ['Crime'] }),
   ] }
-  const ids = (who) => pick(cat, store(), { time: 'any', moods: [], who }, seq(0.9)).picks.map((p) => p.items[0].id)
-  const shown = (who) => new Set([...Array(8)].flatMap(() => ids(who)))
-  assert.deepEqual([...shown('all')].sort(), ['u', 'unrated-safe'])
-  assert.deepEqual([...shown('13')].sort(), ['u', 'ua13', 'unrated-safe'])
-  assert.ok(shown('18').has('a') && shown('18').has('unrated-dark'))
+  // Each title on its own: can it be picked at this rating?
+  const allowedIds = (who) => cat.items
+    .filter((it) => pick({ items: [it] }, store(), { time: 'any', moods: [], who }, seq(0.9)).picks.length > 0)
+    .map((it) => it.id)
+  assert.deepEqual(allowedIds('all'), ['u', 'unrated-safe'])
+  assert.deepEqual(allowedIds('13'), ['u', 'ua13', 'unrated-safe'])
+  assert.deepEqual(allowedIds('18'), ['u', 'ua13', 'ua16', 'a', 'unrated-safe', 'unrated-dark'])
+  // "Family-safe only" in Setup still wins over 18+.
+  const strict = store()
+  strict.settings.familySafe = true
+  assert.deepEqual(cat.items.filter((it) => pick({ items: [it] }, strict, { time: 'any', moods: [], who: '18' }, seq(0.9)).picks.length).map((it) => it.id), ['u', 'unrated-safe'])
 })
 
 test('other languages are allowed, but yours win a tie', () => {

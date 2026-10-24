@@ -112,7 +112,7 @@ export default function PickScreen({ store, go, catalog, byId, account, onPick, 
         </div>
       </Section>
 
-      <Section title="Who's watching">
+      <Section title="Age rating">
         <div className="flex flex-wrap gap-2">
           {WHO.map((w) => (
             <Chip key={w.id} on={ask.who === w.id} onClick={() => set('who', w.id)}>{w.label}</Chip>
