@@ -5,5 +5,30 @@ service cloud.firestore {
     match /users/{uid} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
+    // The Vault: anyone can read it; only admins can change it.
+    match /public/vault {
+      allow read: if true;
+      allow write: if request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    // Popular: each person's ratings, one document per account: title ids
+    // they loved and ids they rated otherwise. Anyone can read them (no
+    // names, just ids); each account writes only its own, at most 500 each.
+    match /loves/{uid} {
+      allow read: if true;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['ids', 'meh', 'at'])
+        && request.resource.data.ids is list
+        && request.resource.data.ids.size() <= 500
+        && (!('meh' in request.resource.data)
+          || (request.resource.data.meh is list && request.resource.data.meh.size() <= 500));
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+    // Admins are one document per admin, its ID the admin's User UID. Nobody
+    // can read or change this list from the app; it's managed in the Firebase
+    // console only, so no UID ever appears in these rules or the repo.
+    match /admins/{uid} {
+      allow read, write: if false;
+    }
   }
 }

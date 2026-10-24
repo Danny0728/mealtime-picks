@@ -33,6 +33,16 @@ test('filters platforms, language, safety and already-seen', () => {
   assert.deepEqual(picks.map((p) => p.items[0].id), ['ok'])
 })
 
+test('vault titles get a small boost and say so, but still obey filters', () => {
+  const cat = { items: [item('vaulted', { q: 0.5, genres: ['Drama'] }), item('other', { q: 0.55, genres: ['Comedy'] }), item('tamil', { lang: 'ta', q: 0.5 })] }
+  const s = store({ vault: ['vaulted', 'tamil'] })
+  s.settings.otherLanguages = false
+  const { picks } = pick(cat, s, { time: 'any', moods: [], who: '18' }, seq(0.9))
+  assert.equal(picks[0].items[0].id, 'vaulted')
+  assert.match(picks[0].reason, /From the Vault/)
+  assert.ok(!picks.some((p) => p.items[0].id === 'tamil'), 'a vault title still respects the language filter')
+})
+
 test('certificates read as ages', () => {
   assert.equal(certAge('U'), 0)
   assert.equal(certAge('U/A 7+'), 7)

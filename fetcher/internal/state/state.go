@@ -79,7 +79,8 @@ type State struct {
 	CoMentions      map[string]int         `json:"coMentions"`
 	Resolved        map[string]string      `json:"resolved"` // phrase -> title id ("" = not found)
 	Instagram       Instagram              `json:"instagram"`
-	FeedbackApplied map[string]string      `json:"feedbackApplied"` // title id -> feedback already counted
+	FeedbackApplied map[string]string      `json:"feedbackApplied"`         // title id -> feedback already counted
+	PlatformLogos   map[string]string      `json:"platformLogos,omitempty"` // provider slug -> TMDB logo URL
 }
 
 func New() *State {

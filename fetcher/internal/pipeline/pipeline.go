@@ -583,6 +583,13 @@ func (p *Pipeline) enrich(ctx context.Context) error {
 		n++
 	}
 	p.Log.Printf("tmdb details: %d refreshed", n)
+	// Keep the streaming services' logos seen while refreshing, across runs.
+	for slug, url := range p.tmdb.ProviderLogos() {
+		if p.State.PlatformLogos == nil {
+			p.State.PlatformLogos = map[string]string{}
+		}
+		p.State.PlatformLogos[slug] = url
+	}
 	return nil
 }
 

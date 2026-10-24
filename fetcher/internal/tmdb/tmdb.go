@@ -24,13 +24,14 @@ type Client struct {
 	http   *httpx.Client
 	region string
 	genres map[string]map[int]string // kind -> id -> name
+	logos  map[string]string         // provider slug -> logo URL, first seen
 }
 
 func New(token, region string) *Client {
 	h := httpx.New(60 * time.Millisecond)
 	h.Headers["Authorization"] = "Bearer " + token
 	h.Headers["Accept"] = "application/json"
-	return &Client{http: h, region: region, genres: map[string]map[int]string{}}
+	return &Client{http: h, region: region, genres: map[string]map[int]string{}, logos: map[string]string{}}
 }
 
 type listItem struct {
@@ -194,6 +195,19 @@ func anyNorm(names []string, want string, norm func(string) string) bool {
 
 type providerEntry struct {
 	ProviderName string `json:"provider_name"`
+	LogoPath     string `json:"logo_path"`
+}
+
+const logoBase = "https://image.tmdb.org/t/p/w92"
+
+// ProviderLogos returns each streaming service's TMDB logo seen so far
+// (slug -> image URL), for the app's "where it streams" icons.
+func (c *Client) ProviderLogos() map[string]string {
+	out := make(map[string]string, len(c.logos))
+	for k, v := range c.logos {
+		out[k] = v
+	}
+	return out
 }
 
 type regionProviders struct {
@@ -298,6 +312,9 @@ func (c *Client) Enrich(ctx context.Context, t *model.Title) error {
 				if s != "" && !seen[s] {
 					seen[s] = true
 					t.Providers = append(t.Providers, s)
+				}
+				if s != "" && p.LogoPath != "" && c.logos[s] == "" {
+					c.logos[s] = logoBase + p.LogoPath
 				}
 			}
 		}

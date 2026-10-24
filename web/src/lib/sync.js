@@ -107,6 +107,23 @@ export async function startSync(uid, { getLocal, setLocal, onStatus }) {
   }
 }
 
+// The owner saving the Vault (public/vault). Only the owner's account can
+// write it; firestore.rules rejects anyone else.
+export async function saveVault(items) {
+  const { db, mods } = await load()
+  const { doc, setDoc } = mods.firestore
+  await setDoc(doc(db, 'public', 'vault'), { items: plain(items) })
+}
+
+// This person's ratings (loves/{uid}): titles loved and titles rated
+// otherwise, counted into everyone's Popular. Only ids; firestore.rules lets
+// each account write its own document only.
+export async function saveLoves(uid, { ids, meh }) {
+  const { db, mods } = await load()
+  const { doc, setDoc } = mods.firestore
+  await setDoc(doc(db, 'loves', uid), { ids: plain(ids), meh: plain(meh), at: Date.now() })
+}
+
 // Called after local changes. Always merged with the newest remote copy, so
 // a device that was offline can't overwrite what changed elsewhere.
 export function pushLocal(uid, store) {

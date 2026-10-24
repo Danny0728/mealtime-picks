@@ -3,6 +3,8 @@ import { MOODS, TIMES, WHO, moodsOf } from '../lib/picker.js'
 import { ALL_PLATFORMS, SEEN_RATINGS } from '../lib/store.js'
 import { Back, Badge, Bookmark, External, IconButton, Poster, Shuffle } from '../components/ui.jsx'
 import { About, DetailBadges } from '../components/Details.jsx'
+import { VaultButton } from './Vault.jsx'
+import { copyTitleFor } from '../lib/toast.js'
 
 const label = (list, id) => list.find((x) => x.id === id)?.label
 export const platformName = (id) => ALL_PLATFORMS.find((p) => p.id === id)?.label ?? id
@@ -23,7 +25,7 @@ export function openUrl(item, platform) {
   }
 }
 
-export default function Results({ store, go, results, onPicked, onSeen, onLater, onShuffle }) {
+export default function Results({ store, go, results, vault, onPicked, onSeen, onLater, onShuffle }) {
   const { ask, picks } = results
   const [rating, setRating] = useState(null) // key of the pick asking "How was it?"
   const moods = moodsOf(ask).map((m) => label(MOODS, m)).filter(Boolean).join(' or ')
@@ -64,7 +66,7 @@ export default function Results({ store, go, results, onPicked, onSeen, onLater,
       )}
 
       {/* Phones: one column. Laptops: three side by side to compare. */}
-      <div className="contents lg:grid lg:grid-cols-3 lg:items-start lg:gap-5">
+      <div className="contents lg:grid lg:grid-cols-3 lg:gap-5">
       {picks.map((p) => {
         const main = p.items[0]
         const platform = main.providers.find((x) => mine.has(x)) ?? main.providers[0]
@@ -100,7 +102,8 @@ export default function Results({ store, go, results, onPicked, onSeen, onLater,
               </div>
             </div>
             {p.kind !== 'combo' && <About item={main} />}
-            <p className="text-[13px] leading-snug font-medium text-gold">★ {p.reason}</p>
+            {/* From here down sits at the bottom, so the three cards line up. */}
+            <p className="mt-auto text-[13px] leading-snug font-medium text-gold">★ {p.reason}</p>
             {rating === p.key ? (
               <div className="flex flex-col gap-2">
                 <p className="text-sm font-semibold">How was it?</p>
@@ -126,7 +129,10 @@ export default function Results({ store, go, results, onPicked, onSeen, onLater,
                   href={openUrl(main, platform)}
                   target="_blank"
                   rel="noreferrer"
-                  onClick={() => onPicked(p)}
+                  onClick={() => {
+                    onPicked(p)
+                    if (platform !== 'youtube') copyTitleFor(main.name, platformName(platform))
+                  }}
                   className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-2 text-sm font-semibold text-primary-ink"
                 >
                   {p.kind === 'combo' ? 'Play first' : `Open ${platformName(platform)}`} <External />
@@ -147,6 +153,8 @@ export default function Results({ store, go, results, onPicked, onSeen, onLater,
                 </button>
               </div>
             )}
+            {/* Owner only: add this pick to (or take it out of) the Vault. */}
+            {p.kind !== 'combo' && <VaultButton vault={vault} item={main} />}
           </article>
         )
       })}
