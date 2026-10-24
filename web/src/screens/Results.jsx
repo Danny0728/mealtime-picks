@@ -34,12 +34,21 @@ export default function Results({ store, go, results, onPicked, onSeen, onLater,
     <main className="flex min-h-full flex-1 flex-col gap-4 px-5 pt-6 pb-7 lg:px-10 lg:pt-10">
       <header className="flex items-center gap-3">
         <IconButton label="Back" onClick={() => go('pick')}><Back /></IconButton>
-        <div>
+        <div className="min-w-0 flex-1">
           <h1 className="font-display text-[34px] leading-none tracking-[0.02em]">
             {picks.length ? `Here ${picks.length === 1 ? 'is 1' : `are ${picks.length}`}` : 'Nothing fits yet'}
           </h1>
           <p className="text-sm text-muted">{summary}</p>
         </div>
+        {/* The same as the big button at the bottom, without scrolling down to it. */}
+        <button
+          type="button"
+          aria-label="What else is cooking? Show me others"
+          onClick={onShuffle}
+          className="flex size-12 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#111] text-white shadow-lg"
+        >
+          <Shuffle size={22} />
+        </button>
       </header>
 
       {picks.length > 0 && results.moodMatched === false && (
@@ -62,7 +71,7 @@ export default function Results({ store, go, results, onPicked, onSeen, onLater,
         const title = p.kind === 'combo' ? p.items.map((i) => i.name).join(' + ') : main.name
         const when =
           p.kind === 'continue'
-            ? `Episodes ${p.epFrom}–${p.epFrom + p.episodes - 1}`
+            ? p.episodes > 1 ? `Episodes ${p.epFrom}–${p.epFrom + p.episodes - 1}` : `Episode ${p.epFrom}`
             : p.episodes
               ? `Episode${p.episodes > 1 ? `s 1–${p.episodes}` : ' 1'}`
               : null
@@ -150,7 +159,10 @@ export default function Results({ store, go, results, onPicked, onSeen, onLater,
         onClick={onShuffle}
         className="flex min-h-[52px] items-center justify-center gap-2 rounded-2xl border border-gold bg-card text-base font-semibold text-gold lg:mx-auto lg:w-[360px]"
       >
-        <Shuffle /> Shuffle for 3 new ones
+        <span className="flex flex-col items-center leading-tight">
+          <span className="flex items-center gap-2"><span aria-hidden="true">🍳</span> What else is cooking?</span>
+          <span className="text-xs font-medium opacity-75">show me others</span>
+        </span>
       </button>
       <p className="text-center text-xs text-muted">Title data and images from TMDB</p>
     </main>

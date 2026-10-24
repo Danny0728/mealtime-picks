@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { pick, fit, timeById, updateWeights, DEFAULT_WEIGHTS } from './picker.js'
+import { pick, fit, timeById, updateWeights, certAge, DEFAULT_WEIGHTS } from './picker.js'
 
 const item = (id, o) => ({
   id, kind: 'movie', name: id, lang: 'hi', providers: ['netflix'], safe: true,
@@ -31,6 +31,34 @@ test('filters platforms, language, safety and already-seen', () => {
   s.settings.otherLanguages = false
   const { picks } = pick(cat, s, { time: '45', mood: null, who: 'family' }, seq(0.9))
   assert.deepEqual(picks.map((p) => p.items[0].id), ['ok'])
+})
+
+test('certificates read as ages', () => {
+  assert.equal(certAge('U'), 0)
+  assert.equal(certAge('U/A 7+'), 7)
+  assert.equal(certAge('UA 13+'), 13)
+  assert.equal(certAge('UA'), 13)
+  assert.equal(certAge('UA 16+'), 16)
+  assert.equal(certAge('A'), 18)
+  assert.equal(certAge('TV-MA'), 18)
+  assert.equal(certAge(''), null)
+  assert.equal(certAge('weird'), null)
+})
+
+test('age rating chips: All ages, 13+, 18+', () => {
+  const cat = { items: [
+    item('u', { cert: 'U' }),
+    item('ua13', { cert: 'UA 13+', safe: false }),
+    item('ua16', { cert: 'UA 16+', safe: false }),
+    item('a', { cert: 'A', safe: false }),
+    item('unrated-safe', { cert: undefined, genres: ['Drama'] }),
+    item('unrated-dark', { cert: undefined, safe: false, genres: ['Crime'] }),
+  ] }
+  const ids = (who) => pick(cat, store(), { time: 'any', moods: [], who }, seq(0.9)).picks.map((p) => p.items[0].id)
+  const shown = (who) => new Set([...Array(8)].flatMap(() => ids(who)))
+  assert.deepEqual([...shown('all')].sort(), ['u', 'unrated-safe'])
+  assert.deepEqual([...shown('13')].sort(), ['u', 'ua13', 'unrated-safe'])
+  assert.ok(shown('18').has('a') && shown('18').has('unrated-dark'))
 })
 
 test('other languages are allowed, but yours win a tie', () => {
@@ -93,6 +121,20 @@ test('no moods selected means any mood', () => {
   const cat = { items: [item('a', { moods: {} }), item('b', { moods: { docu: 0.9 } })] }
   const { picks } = pick(cat, store(), { time: '45', moods: [], who: 'adults' }, seq(0.9))
   assert.equal(picks.length, 2)
+})
+
+test('Any length lets in long films, short videos and series alike, ranked on content', () => {
+  const cat = { items: [
+    item('epic', { runtime: 170, q: 0.9 }),
+    item('show', { kind: 'tv', epMin: 55, q: 0.6, genres: ['Drama'] }),
+    item('clip', { kind: 'youtube', providers: ['youtube'], runtime: 12, q: 0.5, lang: '', genres: ['Comedy'] }),
+  ] }
+  const { picks } = pick(cat, store(), { time: 'any', moods: [], who: 'adults' }, seq(0.9))
+  assert.equal(picks.length, 3)
+  assert.equal(picks[0].items[0].id, 'epic')
+  const show = picks.find((p) => p.items[0].id === 'show')
+  assert.equal(show.episodes, 1)
+  assert.ok(picks.every((p) => p.kind !== 'combo'))
 })
 
 test('two short videos are combined to fill the time', () => {
@@ -177,6 +219,15 @@ test('continue a liked series with the next episodes', () => {
   const { picks } = pick(cat, s, { time: '45', mood: null, who: 'adults' }, seq(0.9))
   assert.equal(picks[0].kind, 'continue')
   assert.equal(picks[0].epFrom, 3)
+})
+
+test('with Any length, continuing a series means the next single episode', () => {
+  const cat = { items: [item('show', { kind: 'tv', epMin: 22 }), item('x')] }
+  const s = store({ history: [{ id: 'show', status: 'picked', feedback: 'liked', at: Date.now(), ep: { from: 1, to: 2 } }] })
+  const { picks } = pick(cat, s, { time: 'any', moods: [], who: 'adults' }, seq(0.9))
+  assert.equal(picks[0].kind, 'continue')
+  assert.equal(picks[0].epFrom, 3)
+  assert.match(picks[0].reason, /episode 3\./)
 })
 
 test('weights move toward what a liked pick was good at', () => {
