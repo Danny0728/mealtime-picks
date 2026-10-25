@@ -41,14 +41,16 @@ export default function InboxScreen({ store, update, go, catalog, byId, incoming
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           rows={5}
+          maxLength={2000}
           placeholder="Paste the caption or the titles from the post"
           className="rounded-2xl border border-line bg-card p-3 text-[15px]"
         />
+        {draft.length > 1800 && <p className="text-right text-[12px] text-muted">{draft.length}/2000</p>}
       </label>
 
       {draft && (
         <section className="flex flex-col gap-2">
-          <h2 className="text-[15px] font-semibold">
+          <h2 className="text-[15px] font-semibold" aria-live="polite">
             {matches.length ? 'We found these' : "No titles we know yet. Save it anyway and next week's search will look them up."}
           </h2>
           {matches.map((m) => (
@@ -70,7 +72,7 @@ export default function InboxScreen({ store, update, go, catalog, byId, incoming
               />
             </label>
           ))}
-          <button type="button" onClick={saveIt} className="min-h-[52px] rounded-2xl bg-linear-to-b from-cta-from to-cta-to text-base font-semibold text-cta-ink">
+          <button type="button" onClick={saveIt} className="min-h-[52px] rounded-2xl bg-linear-to-b from-cta-from to-cta-to text-base font-semibold text-cta-ink transition-[filter] hover:brightness-105">
             Save
           </button>
         </section>

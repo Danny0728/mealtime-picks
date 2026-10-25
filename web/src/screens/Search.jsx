@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Back, Badge, Bookmark, External, GridIcon, IconButton, ListIcon, Poster } from '../components/ui.jsx'
+import { Back, Badge, Bookmark, External, GridIcon, IconButton, ListIcon, OpenLink, Poster } from '../components/ui.jsx'
 import { CardGrid, TitleCard } from '../components/TitleCard.jsx'
 import { searchCatalog } from '../lib/search.js'
 import { openUrl, platformName } from './Results.jsx'
@@ -67,14 +67,27 @@ export default function Search({ store, go, catalog, vault, onSeen, onLater }) {
         </IconButton>
       </header>
 
-      <input
-        type="search"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="A film, series or show…"
-        aria-label="Search titles"
-        className="min-h-12 rounded-2xl border border-line bg-card px-4 text-base text-ink placeholder:text-muted focus:border-gold focus:outline-none"
-      />
+      <div className="relative">
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="A film, series or show…"
+          aria-label="Search titles"
+          className="min-h-12 w-full rounded-2xl border border-line transition-colors hover:border-gold bg-card px-4 text-base text-ink placeholder:text-muted focus-visible:border-gold"
+          style={query ? { paddingRight: '2.75rem' } : undefined}
+        />
+        {query && (
+          <button
+            type="button"
+            aria-label="Clear search"
+            onClick={() => setQuery('')}
+            className="absolute inset-y-0 right-1 flex items-center justify-center px-3 text-muted hover:text-ink"
+          >
+            ✕
+          </button>
+        )}
+      </div>
 
       {catalog.status !== 'ready' && <p className="text-sm text-muted">Loading this week's titles…</p>}
       {browsing && catalog.status === 'ready' && (
@@ -100,18 +113,18 @@ export default function Search({ store, go, catalog, vault, onSeen, onLater }) {
                 </>}>
                 <div className="grid grid-cols-[1fr_auto_auto] gap-2">
                   {platform ? (
-                    <a href={openUrl(item, platform)} target="_blank" rel="noreferrer"
+                    <OpenLink href={openUrl(item, platform)}
                       onClick={() => platform !== 'youtube' && copyTitleFor(item.name, platformName(platform))}
-                      className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-2 text-sm font-semibold text-primary-ink">
+                      className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-2 text-sm font-semibold text-primary-ink transition-opacity hover:opacity-90">
                       Open {platformName(platform)} <External />
-                    </a>
+                    </OpenLink>
                   ) : <span />}
                   <button type="button" aria-pressed={seen.has(item.id)} onClick={() => onSeen(item.id)}
-                    className={`min-h-11 rounded-xl border px-3 text-sm font-semibold backdrop-blur-md ${seen.has(item.id) ? 'border-sel bg-sel text-sel-ink' : 'border-line bg-card/50'}`}>
+                    className={`min-h-11 rounded-xl border px-3 text-sm font-semibold backdrop-blur-md ${seen.has(item.id) ? 'border-sel bg-sel text-sel-ink' : 'border-line transition-colors hover:border-gold bg-card/50'}`}>
                     {seen.has(item.id) ? 'Seen ✓' : 'Seen it'}
                   </button>
                   <button type="button" aria-pressed={later.has(item.id)} onClick={() => onLater(item)}
-                    className={`flex min-h-11 items-center gap-1 rounded-xl border px-3 text-sm font-semibold backdrop-blur-md ${later.has(item.id) ? 'border-sel bg-sel text-sel-ink' : 'border-line bg-card/50'}`}>
+                    className={`flex min-h-11 items-center gap-1 rounded-xl border px-3 text-sm font-semibold backdrop-blur-md ${later.has(item.id) ? 'border-sel bg-sel text-sel-ink' : 'border-line transition-colors hover:border-gold bg-card/50'}`}>
                     <Bookmark /> {later.has(item.id) ? 'Saved' : 'Later'}
                   </button>
                 </div>
@@ -127,7 +140,7 @@ export default function Search({ store, go, catalog, vault, onSeen, onLater }) {
           // Where it streams: one the viewer has if possible, otherwise wherever it is.
           const platform = item.providers.find((p) => mine.has(p)) ?? item.providers[0]
           return (
-            <li key={item.id} className="flex gap-3 rounded-[18px] border border-hair bg-card p-3">
+            <li key={item.id} className="flex gap-3 rounded-[18px] border border-hair bg-card p-3 [content-visibility:auto] [contain-intrinsic-size:140px]">
               <Poster item={item} />
               <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                 <h2 className="text-[16px] leading-tight font-semibold">
@@ -140,18 +153,18 @@ export default function Search({ store, go, catalog, vault, onSeen, onLater }) {
                 </div>
                 <div className="mt-auto flex flex-wrap gap-1.5 pt-1">
                   {platform && (
-                    <a href={openUrl(item, platform)} target="_blank" rel="noreferrer"
+                    <OpenLink href={openUrl(item, platform)}
                       onClick={() => platform !== 'youtube' && copyTitleFor(item.name, platformName(platform))}
-                      className="flex min-h-9 items-center gap-1 rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-ink">
+                      className="flex min-h-9 items-center gap-1 rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-ink transition-opacity hover:opacity-90">
                       Open <External />
-                    </a>
+                    </OpenLink>
                   )}
                   <button type="button" aria-pressed={seen.has(item.id)} onClick={() => onSeen(item.id)}
-                    className={`min-h-9 rounded-lg border px-3 text-[13px] font-semibold ${seen.has(item.id) ? 'border-sel bg-sel text-sel-ink' : 'border-line'}`}>
+                    className={`min-h-9 rounded-lg border px-3 text-[13px] font-semibold ${seen.has(item.id) ? 'border-sel bg-sel text-sel-ink' : 'border-line transition-colors hover:border-gold'}`}>
                     {seen.has(item.id) ? 'Seen ✓' : 'Seen it'}
                   </button>
                   <button type="button" aria-pressed={later.has(item.id)} onClick={() => onLater(item)}
-                    className={`flex min-h-9 items-center gap-1 rounded-lg border px-3 text-[13px] font-semibold ${later.has(item.id) ? 'border-sel bg-sel text-sel-ink' : 'border-line'}`}>
+                    className={`flex min-h-9 items-center gap-1 rounded-lg border px-3 text-[13px] font-semibold ${later.has(item.id) ? 'border-sel bg-sel text-sel-ink' : 'border-line transition-colors hover:border-gold'}`}>
                     <Bookmark /> {later.has(item.id) ? 'Saved' : 'Later'}
                   </button>
                   <VaultButton vault={vault} item={item} compact />

@@ -93,7 +93,7 @@ export default function PickScreen({ store, go, catalog, byId, account, vault, o
         </div>
       )}
       {thanks && (
-        <p className="rounded-2xl bg-good-bg px-4 py-3.5 text-[15px] font-medium text-good">
+        <p role="status" className="rounded-2xl bg-good-bg px-4 py-3.5 text-[15px] font-medium text-good">
           Noted: {thanks}. That helps the next picks.
         </p>
       )}
@@ -101,7 +101,7 @@ export default function PickScreen({ store, go, catalog, byId, account, vault, o
       {/* Search is the owner's tool for filling the Vault. */}
       {vault.admin && (
         <button type="button" onClick={() => go('search')}
-          className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-line bg-card/60 text-sm font-semibold backdrop-blur-md">
+          className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-line bg-card/60 text-sm font-semibold backdrop-blur-md transition-colors hover:border-gold">
           <SearchIcon /> Search
         </button>
       )}
@@ -149,7 +149,7 @@ export default function PickScreen({ store, go, catalog, byId, account, vault, o
           type="button"
           disabled={!ready || !store.settings.platforms.length}
           onClick={itadakimasu}
-          className="relative flex min-h-[62px] flex-col items-center justify-center rounded-2xl bg-linear-to-b from-cta-from to-cta-to py-2 text-cta-ink shadow-[0_10px_30px_rgba(242,181,68,0.25)] disabled:opacity-50"
+          className="relative flex min-h-[62px] flex-col items-center justify-center rounded-2xl bg-linear-to-b from-cta-from to-cta-to py-2 text-cta-ink shadow-[0_10px_30px_rgba(242,181,68,0.25)] transition-[filter] hover:brightness-105 disabled:opacity-50 disabled:hover:brightness-100"
         >
           <span className="flex items-center gap-2.5 text-lg leading-tight font-bold">
             <span aria-hidden="true" className="relative text-xl">
@@ -178,7 +178,7 @@ function FeedbackButton({ onClick, children }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-line bg-card text-sm font-semibold"
+      className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-line bg-card text-sm font-semibold transition-colors hover:border-gold"
     >
       {children}
     </button>

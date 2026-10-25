@@ -1,4 +1,4 @@
-import { Back, Badge, External, IconButton, PlatformIcons } from '../components/ui.jsx'
+import { Back, Badge, External, IconButton, OpenLink, PlatformIcons } from '../components/ui.jsx'
 import { CardGrid, TitleCard } from '../components/TitleCard.jsx'
 import { openUrl, platformName } from './Results.jsx'
 import { copyTitleFor } from '../lib/toast.js'
@@ -34,7 +34,7 @@ export default function Watchlist({ store, go, catalog, byId, onWatch, onRemove 
         const platform = item.providers.find((x) => mine.has(x))
         const size = !known ? null : item.kind === 'tv' ? `${item.epMin || 30} min episodes` : item.runtime ? `${item.runtime} min` : null
         const remove = (
-          <button type="button" onClick={() => onRemove(w.id)} className="min-h-11 rounded-xl border border-line bg-card/50 px-3 text-sm font-semibold backdrop-blur-md">
+          <button type="button" onClick={() => onRemove(w.id)} className="min-h-11 rounded-xl border border-line bg-card/50 px-3 text-sm font-semibold backdrop-blur-md transition-colors hover:border-gold">
             Remove
           </button>
         )
@@ -50,18 +50,16 @@ export default function Watchlist({ store, go, catalog, byId, onWatch, onRemove 
               : <p className="text-sm text-muted">Not in this week's list</p>)}>
             {platform ? (
               <div className="grid grid-cols-[1fr_auto] gap-2">
-                <a
+                <OpenLink
                   href={openUrl(item, platform)}
-                  target="_blank"
-                  rel="noreferrer"
                   onClick={() => {
                     onWatch(w.id)
                     if (platform !== 'youtube') copyTitleFor(item.name, platformName(platform))
                   }}
-                  className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-2 text-sm font-semibold text-primary-ink"
+                  className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-2 text-sm font-semibold text-primary-ink transition-opacity hover:opacity-90"
                 >
                   Open {platformName(platform)} <External />
-                </a>
+                </OpenLink>
                 {remove}
               </div>
             ) : remove}

@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { load, save } from './lib/store.js'
 import { pick, updateWeights } from './lib/picker.js'
 import { readShareParams } from './lib/share.js'
 import { applyTheme } from './lib/theme.js'
+import { toast } from './lib/toast.js'
 import { stampChanges } from './lib/merge.js'
 import { useAccount } from './lib/useAccount.js'
 import Setup from './screens/Setup.jsx'
@@ -49,8 +50,14 @@ export default function App() {
   const [results, setResults] = useState(null)
   const [incoming, setIncoming] = useState(null)
 
+  // If this ever fails (storage full or blocked), say so once rather than
+  // silently losing picks and feedback from here on.
+  const saveWarned = useRef(false)
   useEffect(() => {
-    save(store)
+    if (!save(store) && !saveWarned.current) {
+      saveWarned.current = true
+      toast("Couldn't save to this device (storage full or blocked). Recent changes may not stick.")
+    }
   }, [store])
 
   useEffect(() => applyTheme(store.settings.theme), [store.settings.theme])
@@ -252,12 +259,12 @@ export default function App() {
       {screen}
       {/* A failed Vault save, wherever it happened (owner only). */}
       {note && !vault.error && (
-        <div role="status" className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-[460px] rounded-2xl border border-line bg-card p-4 text-[13px] text-ink shadow-xl">
+        <div role="status" className="safe-b-4 fixed inset-x-4 z-50 mx-auto max-w-[460px] rounded-2xl border border-line bg-card p-4 text-[13px] text-ink shadow-xl">
           {note}
         </div>
       )}
       {vault.error && (
-        <div role="alert" className="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-[460px] items-start gap-3 rounded-2xl border border-line bg-card p-4 text-[13px] text-ink shadow-xl">
+        <div role="alert" className="safe-b-4 fixed inset-x-4 z-50 mx-auto flex max-w-[460px] items-start gap-3 rounded-2xl border border-line bg-card p-4 text-[13px] text-ink shadow-xl">
           <p className="flex-1">{vault.error}</p>
           <button type="button" onClick={vault.clearError} aria-label="Dismiss" className="font-semibold text-gold">OK</button>
         </div>

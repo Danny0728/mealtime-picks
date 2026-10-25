@@ -1,7 +1,7 @@
 // The picks screen's card for any list of titles (Search, The Vault,
 // Popular): lit by its own poster, with the title's details and the
 // buttons each screen passes in.
-import { Poster } from './ui.jsx'
+import { Poster, spotlightMove } from './ui.jsx'
 import { About, DetailBadges } from './Details.jsx'
 
 // `details`: the catalog's entry, when the title is in this week's list
@@ -9,7 +9,7 @@ import { About, DetailBadges } from './Details.jsx'
 // `extra` under it; `children` are the buttons.
 export function TitleCard({ item, details = item, languages, badges, extra, children }) {
   return (
-    <article className="relative isolate flex flex-col gap-3 overflow-hidden rounded-[22px] border border-hair bg-card p-3.5">
+    <article onMouseMove={spotlightMove} className="spotlight relative isolate flex flex-col gap-3 overflow-hidden rounded-[22px] border border-hair bg-card p-3.5 [content-visibility:auto] [contain-intrinsic-size:280px]">
       {/* A blurred copy of the poster behind, a veil so text stays readable. */}
       {item.poster && (
         <>

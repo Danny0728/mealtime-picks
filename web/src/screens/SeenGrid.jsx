@@ -41,12 +41,12 @@ export default function SeenGrid({ store, update, go, catalog }) {
           const on = seen.has(it.id)
           const rating = store.seenRatings[it.id]
           return (
-            <div key={it.id} className="flex flex-col gap-1">
+            <div key={it.id} className="flex flex-col gap-1 [content-visibility:auto] [contain-intrinsic-size:160px]">
               <button
                 type="button"
                 aria-pressed={on}
                 onClick={() => toggle(it.id)}
-                className={`flex flex-col gap-1.5 rounded-xl border p-1.5 text-left ${on ? 'border-sel bg-sel text-sel-ink' : 'border-hair bg-card'}`}
+                className={`flex flex-col gap-1.5 rounded-xl border p-1.5 text-left transition-colors ${on ? 'border-sel bg-sel text-sel-ink' : 'border-hair bg-card hover:border-gold'}`}
               >
                 {it.poster ? (
                   <img src={it.poster} alt="" loading="lazy" className={`aspect-[2/3] w-full rounded-lg object-cover ${on ? 'opacity-50' : ''}`} />
@@ -64,7 +64,7 @@ export default function SeenGrid({ store, update, go, catalog }) {
                       aria-label={r.label}
                       aria-pressed={rating === r.id}
                       onClick={() => rate(it.id, r.id)}
-                      className={`min-h-9 rounded-lg border text-[12px] font-semibold ${rating === r.id ? 'border-sel bg-sel text-sel-ink' : 'border-line bg-card'}`}
+                      className={`min-h-9 rounded-lg border text-[12px] font-semibold transition-colors ${rating === r.id ? 'border-sel bg-sel text-sel-ink' : 'border-line bg-card hover:border-gold'}`}
                     >
                       {r.short}
                     </button>
@@ -75,7 +75,7 @@ export default function SeenGrid({ store, update, go, catalog }) {
           )
         })}
       </div>
-      <button type="button" onClick={() => go('setup')} className="sticky bottom-4 min-h-[52px] rounded-2xl bg-primary text-base font-semibold text-primary-ink lg:mx-auto lg:w-[360px]">
+      <button type="button" onClick={() => go('setup')} className="safe-b-4 sticky min-h-[52px] rounded-2xl bg-primary text-base font-semibold text-primary-ink transition-opacity hover:opacity-90 lg:mx-auto lg:w-[360px]">
         Done
       </button>
     </main>

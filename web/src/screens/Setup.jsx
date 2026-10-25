@@ -43,20 +43,28 @@ function AccountSection({ account }) {
               <p className="truncate text-base font-semibold">{user.name}</p>
               <p className={`text-[13px] ${status === 'error' ? 'text-accent-ink' : 'text-muted'}`}>{STATUS[status] ?? STATUS.synced}</p>
             </div>
-            <button type="button" onClick={account.signOut} className="min-h-11 rounded-xl border border-line bg-card px-4 text-sm font-semibold">
+            <button type="button" onClick={account.signOut} className="min-h-11 rounded-xl border border-line bg-card px-4 text-sm font-semibold transition-colors hover:border-gold">
               Sign out
             </button>
           </div>
         ) : (
           <>
             <p className="text-[14px] text-soft">Keeps your seen list, ratings and watchlist the same on all your devices.</p>
-            <button type="button" onClick={account.signIn} className="min-h-12 rounded-xl bg-primary text-[15px] font-semibold text-primary-ink">
+            <button type="button" onClick={account.signIn} className="min-h-12 rounded-xl bg-primary text-[15px] font-semibold text-primary-ink transition-opacity hover:opacity-90">
               Sign in with Google
             </button>
             {signedOut && (
               <p className="text-[13px] text-muted">
                 This device keeps a copy.{' '}
-                <button type="button" onClick={account.clearDevice} className="font-semibold text-gold underline">Clear this device</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm('Clear this device? This permanently erases your watch history, ratings and watchlist stored here. This cannot be undone.')) account.clearDevice()
+                  }}
+                  className="font-semibold text-gold underline"
+                >
+                  Clear this device
+                </button>
               </p>
             )}
           </>
@@ -69,7 +77,7 @@ function AccountSection({ account }) {
 
 export default function Setup({ store, update, go, catalog, account }) {
   const fileRef = useRef(null)
-  const [msg, setMsg] = useState('')
+  const [msg, setMsg] = useState(null) // { text, ok }
   const s = store.settings
 
   const toggle = (key, id) =>
@@ -82,12 +90,16 @@ export default function Setup({ store, update, go, catalog, account }) {
   const onImport = async (e) => {
     const f = e.target.files?.[0]
     if (!f) return
+    if (!confirm("Import this backup? It replaces everything on this device — history, ratings and watchlist — with what's in the file.")) {
+      e.target.value = ''
+      return
+    }
     try {
       const next = await importBackup(f)
       update(() => next)
-      setMsg('Backup restored.')
+      setMsg({ text: 'Backup restored.', ok: true })
     } catch {
-      setMsg("That file isn't a Mealtime backup.")
+      setMsg({ text: "That file isn't a Mealtime backup.", ok: false })
     }
     e.target.value = ''
   }
@@ -109,7 +121,7 @@ export default function Setup({ store, update, go, catalog, account }) {
           <p className="text-[13px] font-semibold uppercase tracking-[0.06em] text-muted">One-time setup</p>
           <h1 className="font-display text-[36px] leading-none tracking-[0.02em]">Your household</h1>
         </div>
-        <button type="button" onClick={done} className="min-h-11 rounded-xl bg-primary px-[18px] text-[15px] font-semibold text-primary-ink">
+        <button type="button" onClick={done} className="min-h-11 rounded-xl bg-primary px-[18px] text-[15px] font-semibold text-primary-ink transition-opacity hover:opacity-90">
           Done
         </button>
       </header>
@@ -177,7 +189,7 @@ export default function Setup({ store, update, go, catalog, account }) {
           type="button"
           disabled={catalog.status !== 'ready'}
           onClick={() => go('seen')}
-          className="min-h-11 rounded-xl border border-line bg-card text-sm font-semibold disabled:opacity-50"
+          className="min-h-11 rounded-xl border border-line bg-card text-sm font-semibold transition-colors enabled:hover:border-gold disabled:opacity-50"
         >
           Mark what we've seen ({store.seen.length})
         </button>
@@ -185,15 +197,15 @@ export default function Setup({ store, update, go, catalog, account }) {
 
       <Section title="Your history" hint="Saved on this device only. Export it now and then, and commit it as data/feedback.json so next week's search learns from it.">
         <div className="grid grid-cols-2 gap-2">
-          <button type="button" onClick={() => exportBackup(store)} className="min-h-11 rounded-xl border border-line bg-card text-sm font-semibold">
+          <button type="button" onClick={() => exportBackup(store)} className="min-h-11 rounded-xl border border-line bg-card text-sm font-semibold transition-colors hover:border-gold">
             Export backup
           </button>
-          <button type="button" onClick={() => fileRef.current?.click()} className="min-h-11 rounded-xl border border-line bg-card text-sm font-semibold">
+          <button type="button" onClick={() => fileRef.current?.click()} className="min-h-11 rounded-xl border border-line bg-card text-sm font-semibold transition-colors hover:border-gold">
             Import backup
           </button>
           <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={onImport} />
         </div>
-        {msg && <p className="text-[13px] text-good">{msg}</p>}
+        {msg && <p role="status" className={`text-[13px] ${msg.ok ? 'text-good' : 'text-accent-ink'}`}>{msg.text}</p>}
       </Section>
 
       <p className="mt-auto text-center text-xs text-muted">

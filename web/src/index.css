@@ -122,6 +122,10 @@ button, a, input { font-family: inherit; }
 
 input[type="checkbox"] { accent-color: var(--color-gold); }
 
+/* For fixed/sticky bars pinned to the bottom, so they clear a phone's home
+   indicator (viewport-fit=cover lets content draw under it otherwise). */
+.safe-b-4 { bottom: max(1rem, calc(env(safe-area-inset-bottom) + 1rem)); }
+
 /* Poster wall: slow drift, alternate rows the other way, still for reduced motion. */
 @keyframes drift { to { transform: translateX(-50%); } }
 .wall-row { animation: drift 60s linear infinite; }
@@ -221,4 +225,36 @@ input[type="checkbox"] { accent-color: var(--color-gold); }
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) .card-glow { filter: blur(22px) saturate(1.2) brightness(1.1); opacity: .55; }
   :root:not([data-theme="dark"]) .card-veil { background: linear-gradient(180deg, rgb(255 255 255 / .6) 0%, rgb(255 255 255 / .9) 55%); }
+}
+
+/* Pick/title cards: a thin gold glow traces the card's own border, following
+   the cursor, with a soft lift. Mouse/trackpad only (`--mx`/`--my` come from
+   a mousemove handler) -- on a touch phone there is no cursor to track, so
+   this is skipped entirely and the card gets just the :active press below. */
+.spotlight { transition: transform .3s ease, box-shadow .3s ease; }
+@media (hover: hover) and (pointer: fine) {
+  .spotlight:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 45px -18px rgba(0,0,0,.5), 0 0 26px -6px color-mix(in srgb, var(--color-gold) 30%, transparent);
+  }
+  /* A ring without `mask-composite` (unreliable in testing): paint the
+     gradient on the border-box, then cover everything but the outer 1px
+     with the card's own background so only the ring shows through.
+     z-index: -1 keeps it behind the real content (same layer as .card-glow
+     below) -- unset, an absolutely-positioned box with no stacking context
+     of its own paints ABOVE plain in-flow content regardless of markup
+     order, which blacked out the poster and text on hover. */
+  .spotlight::before {
+    content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; padding: 1px;
+    background:
+      linear-gradient(var(--color-card), var(--color-card)) padding-box,
+      radial-gradient(160px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--color-gold) 90%, transparent), transparent 60%) border-box;
+    background-clip: padding-box, border-box;
+    opacity: 0; transition: opacity .25s ease; pointer-events: none;
+  }
+  .spotlight:hover::before { opacity: 1; }
+}
+.spotlight:active { transform: scale(.98); transition: transform .08s ease; }
+@media (prefers-reduced-motion: reduce) {
+  .spotlight, .spotlight:hover, .spotlight:active { transition: none; transform: none; box-shadow: none; }
 }

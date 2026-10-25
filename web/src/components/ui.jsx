@@ -1,6 +1,34 @@
 // Small shared pieces: chips, buttons, icons, poster.
 import { useState } from 'react'
 
+// Installed (standalone) on the home screen, Android and iOS alike.
+const isStandalone = () =>
+  typeof window !== 'undefined' &&
+  (window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true)
+
+// "Open Netflix" etc. In a normal browser tab, target="_blank" is right: it
+// keeps the app open behind a new tab. Installed as a PWA there is no tab to
+// keep open, and target="_blank" instead pops an in-app mini-browser that
+// traps the visit inside Mealtime Picks. A plain top-level navigation lets
+// Android/iOS hand the link to the real Netflix/Prime app (or the system
+// browser) the way tapping it anywhere else does.
+export function OpenLink({ href, onClick, className, children }) {
+  const standalone = isStandalone()
+  return (
+    <a href={href} target={standalone ? undefined : '_blank'} rel={standalone ? undefined : 'noreferrer'} onClick={onClick} className={className}>
+      {children}
+    </a>
+  )
+}
+
+// Feeds the `.spotlight` card effect (see index.css) the cursor position, as
+// CSS custom properties, so its border glow can follow it per-card.
+export function spotlightMove(e) {
+  const r = e.currentTarget.getBoundingClientRect()
+  e.currentTarget.style.setProperty('--mx', `${((e.clientX - r.left) / r.width) * 100}%`)
+  e.currentTarget.style.setProperty('--my', `${((e.clientY - r.top) / r.height) * 100}%`)
+}
+
 export function Chip({ on, onClick, children }) {
   // Selecting a chip pops it with a soft ripple, but only when tapped:
   // chips already selected when a screen opens stay still. (Held in state:
@@ -17,7 +45,7 @@ export function Chip({ on, onClick, children }) {
       onClick={tap}
       onAnimationEnd={(e) => { if (e.target === e.currentTarget && e.animationName === 'chip-pop') setPopping(false) }}
       className={`relative inline-flex min-h-11 items-center justify-center rounded-full border px-4 text-[15px] font-medium transition-[background-color,border-color,color] duration-200 ${
-        on ? 'border-sel bg-sel font-semibold text-sel-ink' : 'border-line bg-card text-soft'
+        on ? 'border-sel bg-sel font-semibold text-sel-ink' : 'border-line bg-card text-soft hover:border-gold hover:text-ink'
       } ${popping ? 'chip-pop' : ''}`}
     >
       {children}
@@ -44,7 +72,7 @@ export function IconButton({ label, onClick, small = false, children }) {
       type="button"
       aria-label={label}
       onClick={onClick}
-      className={`relative flex size-11 shrink-0 items-center justify-center rounded-xl border border-line bg-card/60 text-ink backdrop-blur-md ${small ? 'max-sm:size-10' : ''}`}
+      className={`relative flex size-11 shrink-0 items-center justify-center rounded-xl border border-line bg-card/60 text-ink backdrop-blur-md transition-colors hover:border-gold hover:bg-card ${small ? 'max-sm:size-10' : ''}`}
     >
       {children}
     </button>

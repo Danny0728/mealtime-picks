@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { MOODS, TIMES, WHO, moodsOf } from '../lib/picker.js'
 import { ALL_PLATFORMS, SEEN_RATINGS } from '../lib/store.js'
-import { Back, Badge, Bookmark, External, IconButton, Poster, Shuffle } from '../components/ui.jsx'
+import { Back, Badge, Bookmark, External, IconButton, OpenLink, Poster, Shuffle, spotlightMove } from '../components/ui.jsx'
 import { About, DetailBadges } from '../components/Details.jsx'
 import { VaultButton } from './Vault.jsx'
 import { copyTitleFor } from '../lib/toast.js'
@@ -47,7 +47,7 @@ export default function Results({ store, go, results, vault, onPicked, onSeen, o
           type="button"
           aria-label="What else is cooking? Show me others"
           onClick={onShuffle}
-          className="flex size-12 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#111] text-white shadow-lg"
+          className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-ink shadow-lg transition-opacity hover:opacity-90"
         >
           <Shuffle size={22} />
         </button>
@@ -78,7 +78,7 @@ export default function Results({ store, go, results, vault, onPicked, onSeen, o
               ? `Episode${p.episodes > 1 ? `s 1–${p.episodes}` : ' 1'}`
               : null
         return (
-          <article key={p.key} className="relative isolate flex flex-col gap-3 overflow-hidden rounded-[22px] border border-hair bg-card p-3.5">
+          <article key={p.key} onMouseMove={spotlightMove} className="spotlight relative isolate flex flex-col gap-3 overflow-hidden rounded-[22px] border border-hair bg-card p-3.5">
             {/* Lit by its own poster: a blurred copy behind, a veil so text stays readable. */}
             {main.poster && p.kind !== 'combo' && (
               <>
@@ -113,41 +113,39 @@ export default function Results({ store, go, results, vault, onPicked, onSeen, o
                       key={r.id}
                       type="button"
                       onClick={() => { setRating(null); onSeen(p, r.id) }}
-                      className="min-h-11 rounded-xl border border-line bg-card/50 px-1 text-sm backdrop-blur-md font-semibold"
+                      className="min-h-11 rounded-xl border border-line bg-card/50 px-1 text-sm backdrop-blur-md font-semibold transition-colors hover:border-gold"
                     >
                       {r.label}
                     </button>
                   ))}
                 </div>
-                <button type="button" onClick={() => { setRating(null); onSeen(p, null) }} className="min-h-9 text-sm text-muted">
+                <button type="button" onClick={() => { setRating(null); onSeen(p, null) }} className="min-h-9 text-sm text-muted transition-colors hover:text-ink">
                   Skip
                 </button>
               </div>
             ) : (
               <div className="grid grid-cols-[1fr_auto_auto] gap-2">
-                <a
+                <OpenLink
                   href={openUrl(main, platform)}
-                  target="_blank"
-                  rel="noreferrer"
                   onClick={() => {
                     onPicked(p)
                     if (platform !== 'youtube') copyTitleFor(main.name, platformName(platform))
                   }}
-                  className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-2 text-sm font-semibold text-primary-ink"
+                  className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-2 text-sm font-semibold text-primary-ink transition-opacity hover:opacity-90"
                 >
                   {p.kind === 'combo' ? 'Play first' : `Open ${platformName(platform)}`} <External />
-                </a>
+                </OpenLink>
                 <button
                   type="button"
                   onClick={() => setRating(p.key)}
-                  className="min-h-11 rounded-xl border border-line bg-card/50 px-3 text-sm backdrop-blur-md font-semibold"
+                  className="min-h-11 rounded-xl border border-line bg-card/50 px-3 text-sm backdrop-blur-md font-semibold transition-colors hover:border-gold"
                 >
                   Seen it
                 </button>
                 <button
                   type="button"
                   onClick={() => onLater(p)}
-                  className="flex min-h-11 items-center gap-1 rounded-xl border border-line bg-card/50 px-3 text-sm backdrop-blur-md font-semibold"
+                  className="flex min-h-11 items-center gap-1 rounded-xl border border-line bg-card/50 px-3 text-sm backdrop-blur-md font-semibold transition-colors hover:border-gold"
                 >
                   <Bookmark /> Later
                 </button>
@@ -165,7 +163,7 @@ export default function Results({ store, go, results, vault, onPicked, onSeen, o
       <button
         type="button"
         onClick={onShuffle}
-        className="flex min-h-[52px] items-center justify-center gap-2 rounded-2xl border border-gold bg-card text-base font-semibold text-gold lg:mx-auto lg:w-[360px]"
+        className="flex min-h-[52px] items-center justify-center gap-2 rounded-2xl border border-gold bg-card text-base font-semibold text-gold transition-colors hover:bg-chip lg:mx-auto lg:w-[360px]"
       >
         <span className="flex flex-col items-center leading-tight">
           <span className="flex items-center gap-2"><span aria-hidden="true">🍳</span> What else is cooking?</span>

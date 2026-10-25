@@ -10,8 +10,8 @@ export function VaultButton({ vault, item, compact = false }) {
       type="button"
       aria-pressed={inVault}
       onClick={() => vault.toggle(item)}
-      className={`flex items-center justify-center gap-1 border px-3 font-semibold ${compact ? 'min-h-9 rounded-lg text-[13px]' : 'min-h-11 rounded-xl text-sm'} ${
-        inVault ? 'border-gold bg-gold/15 text-gold' : 'border-line bg-card/50 backdrop-blur-md'
+      className={`flex items-center justify-center gap-1 border px-3 font-semibold transition-colors ${compact ? 'min-h-9 rounded-lg text-[13px]' : 'min-h-11 rounded-xl text-sm'} ${
+        inVault ? 'border-gold bg-gold/15 text-gold' : 'border-line bg-card/50 backdrop-blur-md hover:border-gold'
       }`}
     >
       {inVault ? '⭐ In Vault' : '+ Vault'}
@@ -54,7 +54,7 @@ export default function Vault({ store, go, catalog, byId, vault, onLater }) {
               <div className="flex flex-wrap gap-2">
                 <LaterButton on={later.has(item.id)} onClick={() => onLater(item)} />
                 {vault.admin && (
-                  <button type="button" onClick={() => vault.toggle(item)} className="min-h-11 rounded-xl border border-line bg-card/50 px-3 text-sm font-semibold backdrop-blur-md">
+                  <button type="button" onClick={() => vault.toggle(item)} className="min-h-11 rounded-xl border border-line bg-card/50 px-3 text-sm font-semibold backdrop-blur-md transition-colors hover:border-gold">
                     Remove
                   </button>
                 )}
@@ -71,7 +71,7 @@ export default function Vault({ store, go, catalog, byId, vault, onLater }) {
 export function LaterButton({ on, onClick }) {
   return (
     <button type="button" aria-pressed={on} onClick={onClick}
-      className={`flex min-h-11 flex-1 items-center justify-center gap-1 rounded-xl border px-3 text-sm font-semibold backdrop-blur-md ${on ? 'border-sel bg-sel text-sel-ink' : 'border-line bg-card/50'}`}>
+      className={`flex min-h-11 flex-1 items-center justify-center gap-1 rounded-xl border px-3 text-sm font-semibold backdrop-blur-md transition-colors ${on ? 'border-sel bg-sel text-sel-ink' : 'border-line bg-card/50 hover:border-gold'}`}>
       <Bookmark /> {on ? 'Saved' : 'Later'}
     </button>
   )

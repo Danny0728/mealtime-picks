@@ -5,3 +5,4 @@ data/state.json
 .DS_Store
 .superpowers
 *.local
+.claude/launch.json
