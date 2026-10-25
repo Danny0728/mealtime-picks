@@ -231,7 +231,12 @@ input[type="checkbox"] { accent-color: var(--color-gold); }
    the cursor, with a soft lift. Mouse/trackpad only (`--mx`/`--my` come from
    a mousemove handler) -- on a touch phone there is no cursor to track, so
    this is skipped entirely and the card gets just the :active press below. */
-.spotlight { transition: transform .3s ease, box-shadow .3s ease; }
+/* `opacity` is here (not just on `.spotlight:hover`) so the "already
+   watched" fade (an Tailwind `opacity-*`/`hover:opacity-*` pair applied
+   alongside this class) still animates: that's a layered Tailwind utility,
+   and this unlayered rule's `transition` shorthand would otherwise replace
+   its transition-property outright rather than add to it. */
+.spotlight { transition: transform .3s ease, box-shadow .3s ease, opacity .3s ease; }
 @media (hover: hover) and (pointer: fine) {
   .spotlight:hover {
     transform: translateY(-5px);

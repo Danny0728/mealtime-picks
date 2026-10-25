@@ -24,6 +24,7 @@ export function VaultButton({ vault, item, compact = false }) {
 export default function Vault({ store, go, catalog, byId, vault, onLater }) {
   const logos = catalog.status === 'ready' ? catalog.data.platformLogos : null
   const later = new Set(store.watchlist.map((w) => w.id))
+  const seen = new Set(store.seen)
 
   return (
     <main className="flex flex-1 flex-col gap-4 px-5 pt-6 pb-7 lg:px-10 lg:pt-10">
@@ -47,7 +48,7 @@ export default function Vault({ store, go, catalog, byId, vault, onLater }) {
           const known = byId.get(entry.id)
           const item = known ?? { ...entry, providers: [] }
           return (
-            <TitleCard key={entry.id} item={item} details={known} languages={store.settings.languages}
+            <TitleCard key={entry.id} item={item} details={known} languages={store.settings.languages} watched={seen.has(entry.id)}
               badges={<span className="rounded-md bg-gold/15 px-2 py-0.5 text-xs font-semibold text-gold">⭐ Vault</span>}
               // Where it streams, for everyone; no links out, since not everyone has every service.
               extra={<PlatformIcons providers={item.providers} logos={logos} />}>

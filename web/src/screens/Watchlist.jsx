@@ -8,6 +8,7 @@ import { copyTitleFor } from '../lib/toast.js'
 export default function Watchlist({ store, go, catalog, byId, onWatch, onRemove }) {
   const logos = catalog.status === 'ready' ? catalog.data.platformLogos : null
   const mine = new Set(store.settings.platforms)
+  const seen = new Set(store.seen)
   const entries = [...store.watchlist].sort((a, b) => b.at - a.at)
 
   return (
@@ -39,7 +40,7 @@ export default function Watchlist({ store, go, catalog, byId, onWatch, onRemove 
           </button>
         )
         return (
-          <TitleCard key={w.id} item={item} details={known} languages={store.settings.languages}
+          <TitleCard key={w.id} item={item} details={known} languages={store.settings.languages} watched={seen.has(w.id)}
             badges={<>
               {platform && <Badge>{platformName(platform)}</Badge>}
               {size && <Badge>{size}</Badge>}
